@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProfileInfo from "../components/profile/ProfileInfo.astro";
+import ProfileActionButton from "../components/profile/ProfileActionButton.astro";
+import TabsButtons from "../components/TabsButtons.tsx";
+import ProjectsCC from '../components/project/ProjectsCC.astro';
+import AboutMeCC from "../components/about/AboutMeCC.astro";
+import ProfileFacts from "../components/profile/ProfileFacts.astro";
+---
+<Layout title="Harut Aristakesyan | Portfolio" description="Harutyun Aristakesyan Sofware Enginner"
+        scrollSmooth={false}>
+    <ProfileInfo/>
+    <ProfileFacts/>
+    <ProfileActionButton/>
+    <TabsButtons client:idle>
+        <ProjectsCC slot="portfolio"/>
+        <AboutMeCC slot="about"/>
+    </TabsButtons>
+</Layout>

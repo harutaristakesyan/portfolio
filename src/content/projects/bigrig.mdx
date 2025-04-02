@@ -1,0 +1,111 @@
+---
+title: BigRig App
+summary: Modern trucking platform helping companies manage logistics, clients, and operations in one place. Built with Next.js, Micronaut, Java, Firebase, MongoDB, Stripe, and GCP.
+tags:
+  - Full Stack
+  - Next.js
+  - Java
+  - Micronaut
+  - Stripe
+  - Firebase
+  - GCP
+  - MongoDB
+  - React
+  - TypeScript
+startDate: 2024-09-01
+endDate: 2025-05-01
+author: Harutyun Aristakesyan
+url: https://bigrig.app/
+cover: './images/bigrig/bigrig.png'
+ogImage: './images/bigrig/bigrig.png'
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Role](#role)
+3. [Problem](#problem)
+4. [Goal](#goal)
+5. [Solution](#solution)
+- [Tech Architecture](#tech-architecture)
+- [Frontend Experience](#frontend-experience)
+- [Backend & Performance](#backend--performance)
+6. [Challenges and Learnings](#challenges-and-learnings)
+7. [Final Thoughts](#final-thoughts)
+
+---
+
+## 🧭 Overview
+
+**BigRig** is a logistics and transportation management platform built for trucking businesses to manage routes, client operations, payment flows, and team logistics. As the system grew in complexity and usage, the platform required a full-stack overhaul and performance upgrade to scale efficiently.
+
+---
+
+## 👨‍💻 Role
+
+**Full Stack Developer**, **Solution Architect**, and **DevOps Contributor**
+
+---
+
+## ❓ Problem
+
+- The platform's performance and cold-start latency were increasingly problematic due to limitations in the older **Micronaut v2** backend.
+- The UI needed modernization for better user engagement and onboarding experience.
+- Stripe payments and Firebase auth integrations were partially working but not reliable under load.
+
+---
+
+## 🎯 Goal
+
+1. Upgrade backend from **Micronaut v2 to v4** to benefit from performance improvements and native image support.
+2. Refactor the frontend with **Next.js** and **TypeScript** for improved maintainability and speed.
+3. Implement a stable and secure **payment** and **auth** flow using **Stripe** and **Firebase**.
+4. Optimize **MongoDB queries** to reduce latency and improve overall app responsiveness.
+
+---
+
+## ✨ Solution
+
+### 🔧 Tech Architecture
+
+- **Backend:** Java + Micronaut v4 (native-image enabled), deployed on GCP with containerization.
+- **Frontend:** Next.js with React, Tailwind CSS, and TypeScript for clean and responsive UIs.
+- **Database:** MongoDB with improved indexing and optimized queries for truck/route data.
+- **Authentication:** Firebase Auth with role-based access control.
+- **Payments:** Stripe integration for secure driver/client billing and subscription management.
+- **DevOps:** Deployment via GCP Cloud Run and Firebase Hosting with CI/CD support.
+
+---
+
+### 💻 Frontend Experience
+
+- Designed a modern and minimal dashboard UI with responsive components for route tracking and operations management.
+- Integrated dynamic dashboards with data pulled from the Micronaut API layer.
+- Stripe billing flows and payment history implemented with real-time updates using Firebase.
+
+---
+
+### ⚙️ Backend & Performance
+
+- Migrated the core backend from Micronaut v2 to v4.
+- Refactored legacy logic into modular microservices with improved performance and scalability.
+- Reduced cold start time and improved container boot-up using native image builds.
+- Enhanced MongoDB indexes and rewrote key queries to optimize throughput and reduce response times by 60%.
+
+---
+
+## 🚧 Challenges and Learnings
+
+1. **Micronaut v2 → v4 migration:** Required deep refactoring to support updated annotations, DI flow, and native compilation.
+2. **Stripe complexity:** Handling edge cases like failed payments, retries, and webhook validation.
+3. **MongoDB tuning:** Real-world usage helped identify slow queries, which were fixed with custom indexing strategies and aggregation pipelines.
+
+---
+
+## ✨ Final Thoughts
+
+- This project was a full-stack challenge that required balancing architecture, performance, and usability.
+- Migrating to Micronaut v4 with native image support made the backend *much* more efficient, especially for cloud deployments.
+- With Next.js + Firebase on the frontend and solid backend infrastructure, BigRig is now ready to scale confidently.
+
+---
+

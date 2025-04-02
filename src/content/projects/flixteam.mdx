@@ -1,0 +1,118 @@
+---
+title: FlixTeam IPTV Platform
+summary: Scalable IPTV streaming platform with web and mobile clients, subscription management, and crypto payments. Built with Java Micronaut, React, Node.js, Astro, and React Native.
+tags:
+  - Java
+  - Micronaut
+  - Node.js
+  - React
+  - Astro
+  - React Native
+  - MongoDB
+  - PostgreSQL
+  - Vercel
+  - Crypto
+  - IPTV
+  - Streaming
+  - Full Stack
+startDate: 2023-02-01
+endDate: 2024-02-01
+author: Harutyun Aristakesyan
+url: https://flixteam.tv/
+cover: './images/flixteam/flixteam.png'
+ogImage: './images/flixteam/flixteam.png'
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Role](#role)
+3. [Problem](#problem)
+4. [Goal](#goal)
+5. [Solution](#solution)
+- [Architecture](#architecture)
+- [Frontend](#frontend)
+- [Mobile](#mobile)
+- [Payments](#payments)
+6. [Challenges and Learnings](#challenges-and-learnings)
+7. [Final Thoughts](#final-thoughts)
+
+---
+
+## 📺 Overview
+
+**FlixTeam** is a premium IPTV platform offering live TV and video-on-demand streaming through web and mobile apps. It features a modern UI, secure user subscriptions, and seamless payment handling — including support for **crypto**.
+
+As demand grew, the platform needed to be fast, scalable, and responsive across devices. I led the core development team to bring that vision to life.
+
+---
+
+## 👨‍💻 Role
+
+**Head of Development** — leading architecture, backend, frontend, mobile development, and infrastructure.
+
+---
+
+## ❓ Problem
+
+- Needed to deliver high-performance video streaming on web and mobile.
+- Had to support **traditional** and **crypto** payments reliably and securely.
+- Required a responsive UI with dynamic content and personalized user profiles.
+- Needed a backend that could scale with thousands of concurrent streamers.
+
+---
+
+## 🎯 Goal
+
+1. Build a robust IPTV platform with full streaming, subscription, and account control features.
+2. Support payments via **card** and **crypto wallets** (USDT, BTC, ETH).
+3. Develop cross-platform **mobile apps** with full feature parity.
+4. Ensure scalability across all components using microservice-based architecture.
+
+---
+
+## 🚀 Solution
+
+### 🧱 Architecture
+
+- **Backend API:** Java + Micronaut, containerized and deployed on GCP.
+- **Databases:** MongoDB for unstructured data, PostgreSQL for relational content like plans, invoices, users.
+- **DevOps:** Used Vercel for frontends, Docker + Portainer for backend management.
+
+### 🖥 Frontend (Web)
+
+- **Astro + React:** Built a clean UI with dynamic rendering for program listings, player integration, and pricing pages.
+- **Stripe + Crypto Integration:** UI flows adapted for both payment types.
+- **Admin Panel:** Custom internal tools for managing plans, users, stream links, and analytics.
+
+### 📱 Mobile App
+
+- Built with **React Native** and deployed to iOS and Android.
+- Features include:
+- Login via Firebase
+- Plan subscriptions and payments
+- Live and VOD stream player
+- Push notifications for new releases
+
+### 💳 Payments
+
+- Stripe for card processing
+- Integrated **crypto payments** via third-party wallet APIs
+- Auto-renewal and plan expiry handling via cron + webhooks
+
+---
+
+## ⚙️ Challenges and Learnings
+
+1. **Streaming performance:** Required tuning CDN cache headers and media segment handling to prevent latency and freezing.
+2. **Crypto payments:** Built custom flows for handling confirmations and retries.
+3. **Multi-platform UI:** Ensured consistent experience across web, Android, and iOS with shared component architecture.
+
+---
+
+## ✨ Final Thoughts
+
+- The FlixTeam platform successfully combined modern UI, powerful backend, and flexible payments into one seamless IPTV experience.
+- By leading development across **frontend**, **backend**, and **mobile**, I ensured delivery of a performant, scalable solution used by thousands of subscribers.
+- Learned how to balance user experience with complex tech like media delivery, payments, and real-time API updates.
+
+---

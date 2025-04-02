@@ -1,0 +1,106 @@
+---
+author: Harutyun Aristakesyan
+title: Lessons from Leading Development in Real-World Projects
+description: A collection of hard-earned lessons from building, scaling, and delivering production apps — as a full-stack engineer, architect, and team lead.
+publishDate: 2025-01-20T16:20:35Z
+tags:
+  - Full Stack
+  - Team Leadership
+  - Project Management
+
+cover:
+    src: './images/real-world-dev-lessons/dev-lessons.jpg'
+    alt: 'Dev Lessons'
+---
+
+## 🚀 Introduction
+
+I’ve been writing code for nearly a decade — but the biggest growth came when I started leading teams, owning architecture decisions, and working directly with clients.
+
+In this post, I’m sharing a few **development lessons** I’ve learned from real projects: the kind where deadlines are tight, requirements change mid-sprint, and quality still has to shine.
+
+---
+
+## 🧱 1. Architecture Wins or Breaks a Project
+
+When you’re moving fast, it’s tempting to ship the first working thing — but I’ve learned the hard way that **bad architecture becomes tech debt overnight**.
+
+Whether I’m building a Spring Boot monolith or Micronaut microservices, I prioritize:
+
+- **Modularity:** Small, testable, replaceable components
+- **Separation of concerns:** API, business logic, persistence layers
+- **Cloud-native thinking:** Stateless services, health checks, logging
+
+Tools like Micronaut v4 and containerized environments make this easier — if you plan early.
+
+---
+
+## 🧑‍💻 2. Good Frontend Is Invisible
+
+I’ve built frontends with Astro, React, Next.js, Angular, and even vanilla JS. Here’s the truth:
+
+> A great frontend is one the user doesn’t think about — it just works.
+
+That means:
+
+- Clear UI hierarchy
+- Consistent styling and spacing
+- Instant feedback on interaction
+- Optimized asset loading
+
+Astro + React is my go-to combo for static-first sites like [my portfolio](/), and Next.js when I need dynamic routing or SSR.
+
+---
+
+## 💬 3. Communication Is Code
+
+Leading dev teams taught me this: **your code doesn’t matter if people can’t follow your thought process.**
+
+Every pull request, architecture diagram, Slack message, and comment is part of your system’s maintainability. I try to:
+
+- Write clean, intention-revealing code
+- Review PRs like I’m mentoring, not judging
+- Keep stakeholders updated without overexplaining
+
+If everyone’s aligned, velocity increases without burnout.
+
+---
+
+## 🔁 4. Version Control ≠ Just Git Push
+
+Git is more than a backup tool — it’s a timeline of your thought process.
+
+- Feature branches per task
+- Atomic commits with meaningful messages
+- Pull requests that *tell a story*
+
+This makes debugging easier and reviews faster. Tools like GitHub Actions or GitLab CI help enforce checks automatically, which I integrate on day one.
+
+---
+
+## 🛠 5. Deployment Should Be Boring
+
+I used to SSH into production servers. Not anymore.
+
+Today, I use:
+
+- **Vercel & Netlify** for frontend CI/CD
+- **Portainer** for Docker container orchestration
+- **GCP & AWS** for scalable backend hosting
+- **GitHub Actions / GitLab CI** for build pipelines
+
+Once it’s configured, deployment should just work. Anything else is a risk.
+
+---
+
+## 🧠 Final Thoughts
+
+Being a developer today isn’t just about writing functions — it’s about solving real problems with clean code, sharp tools, and a collaborative mindset.
+
+If you’re looking for someone who can **build**, **lead**, and **deliver** — let’s connect.
+
+And if you’re a dev reading this: Keep learning, keep mentoring, and always ask _“Why?”_ before you ship.
+
+---
+
+> 📩 Let’s connect on [LinkedIn](https://www.linkedin.com/in/harutaristakesyan) or [email me](mailto:harut.aristakesyan@gmail.com) to talk about your next big idea.

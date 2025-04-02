@@ -1,7 +1,6 @@
 export const isUpworkEnv = import.meta.env.PUBLIC_IS_UPWORK === 'true';
 
 export const SITE = {
-    website: "https://simple-portfolio.vicbox.dev",
     title: "Harut Aristakesyan | Portfolio",
     description: "Harutyun Aristakesyan Sofware Enginner",
     tags: ["portfolio", "Resume cv", "Harutyun", "Aristakesyan", "Harutyun Resume"],
@@ -9,7 +8,7 @@ export const SITE = {
     logo: "logo",
     logoText: "H|A Portfolio",
     lang: "en",
-    repository: "https://github.com/vito8916/simple-portfolio.git",
+    repository: "https://github.com/harutaristakesyan/portfolio.git",
     author: "Harut Aristakesyan",
 }
 

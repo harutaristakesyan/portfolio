@@ -19,6 +19,7 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
+import * as ses from "aws-cdk-lib/aws-ses";
 import type { Construct } from "constructs";
 import { allRoutes, assetHandler, routeLogicalId } from "./routes.js";
 
@@ -39,10 +40,14 @@ export interface SiteStackProps extends StackProps {
     /** Public DKIM key (the `p=` value) once generated in the Admin console; omitted until then. */
     dkimPublicKey?: string;
   };
+  /** Recipient of contact-form mail. */
   contactTo: string;
+  /** Sender, e.g. `Portfolio <contact@example.com>`. With a domain it must be on that domain. */
   mailFrom: string;
-  resendApiKey: string;
 }
+
+/** `Name <a@b.c>` → `a@b.c`. */
+export const emailAddress = (value: string) => (value.match(/<([^>]+)>/)?.[1] ?? value).trim();
 
 /** Page routes present in the exact build being uploaded; the edge rejects anything else. */
 export function staticHtmlPaths(source: string): string[] {
@@ -81,23 +86,47 @@ export class SiteStack extends Stack {
           })
         : undefined;
 
+    // --- Outgoing mail (SES) ----------------------------------------------------
+    // With a domain, SES verifies it through Route 53 (Easy DKIM CNAMEs) and uses a custom
+    // MAIL FROM subdomain so both DKIM and SPF align for DMARC. Without one, the sender address
+    // itself is the identity and AWS emails a verification link on the first deploy.
+    const fromAddress = emailAddress(props.mailFrom);
+    const fromDomain = fromAddress.split("@")[1]?.toLowerCase();
+    if (domain && fromDomain !== domain.toLowerCase()) {
+      throw new Error(`MAIL_FROM (${fromAddress}) must be an address on ${domain}`);
+    }
+    const senderIdentity =
+      domain && zone
+        ? new ses.EmailIdentity(this, "MailDomain", {
+            identity: ses.Identity.publicHostedZone(zone),
+            mailFromDomain: `bounce.${domain}`,
+          })
+        : new ses.EmailIdentity(this, "MailSender", { identity: ses.Identity.email(fromAddress) });
+    // While the account is in the SES sandbox the recipient must be verified too (and the
+    // sending role needs permission on it). One click on the AWS verification email.
+    const toAddress = emailAddress(props.contactTo);
+    const recipientIdentity =
+      toAddress.toLowerCase() === fromAddress.toLowerCase() ||
+      (domain && toAddress.split("@")[1]?.toLowerCase() === domain.toLowerCase())
+        ? undefined
+        : new ses.EmailIdentity(this, "MailRecipient", { identity: ses.Identity.email(toAddress) });
+
     // --- API: one Lambda per route ------------------------------------------
     const httpApi = new HttpApi(this, "HttpApi", { apiName: id, createDefaultStage: false });
     new HttpStage(this, "Stage", {
       httpApi,
       autoDeploy: true,
-      // A personal contact form never needs more than this; it caps the Resend bill on a bad day.
+      // A personal contact form never needs more than this; it caps the mail volume on a bad day.
       throttle: { rateLimit: 5, burstLimit: 10 },
     });
     const environment = {
       CONTACT_TO: props.contactTo,
       MAIL_FROM: props.mailFrom,
-      RESEND_API_KEY: props.resendApiKey,
     };
     for (const route of allRoutes) {
       const baseId = routeLogicalId(route.handler);
       const fn = new lambda.Function(this, baseId, {
-        runtime: lambda.Runtime.NODEJS_22_X,
+        runtime: lambda.Runtime.NODEJS_24_X,
         architecture: lambda.Architecture.ARM_64,
         code: lambda.Code.fromAsset(BUNDLE_DIR),
         handler: assetHandler(route.handler),
@@ -109,6 +138,8 @@ export class SiteStack extends Stack {
           removalPolicy: RemovalPolicy.DESTROY,
         }),
       });
+      senderIdentity.grantSendEmail(fn);
+      recipientIdentity?.grantSendEmail(fn);
       const [method, routePath] = route.routeKey.split(" ") as [HttpMethod, string];
       new HttpRoute(this, `${baseId}-route`, {
         httpApi,

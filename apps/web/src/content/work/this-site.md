@@ -4,7 +4,7 @@ summary: Static Astro on a private S3 bucket behind CloudFront, one Lambda for t
 role: Everything
 period: Nov 2026
 duration: one weekend
-stack: [Astro, TypeScript, S3, CloudFront, Lambda, API Gateway, AWS CDK, GitHub Actions]
+stack: [Astro, TypeScript, S3, CloudFront, Lambda, API Gateway, SES, AWS CDK, GitHub Actions]
 order: 6
 diagram:
   caption: harut.dev — request path and deploy path
@@ -14,7 +14,7 @@ diagram:
     - { id: s3, label: S3, sub: private · OAC, col: 2, row: 0 }
     - { id: api, label: HTTP API, sub: 5 req/s, col: 2, row: 1 }
     - { id: lambda, label: contact λ, sub: Zod · honeypot, col: 3, row: 1, kind: key }
-    - { id: resend, label: Resend, sub: email, col: 4, row: 1, kind: ext }
+    - { id: ses, label: SES, sub: DKIM · IAM role, col: 4, row: 1 }
     - { id: gh, label: GitHub Actions, sub: OIDC role, col: 0, row: 2, kind: ext }
     - { id: cdk, label: CDK deploy, sub: one stack, col: 1, row: 2, kind: key }
   edges:
@@ -22,7 +22,7 @@ diagram:
     - { from: cf, to: s3, label: pages, kind: key }
     - { from: cf, to: api, label: form POST }
     - { from: api, to: lambda, kind: key }
-    - { from: lambda, to: resend }
+    - { from: lambda, to: ses }
     - { from: gh, to: cdk, kind: dashed }
     - { from: cdk, to: s3, kind: dashed }
 ---
@@ -43,7 +43,7 @@ A portfolio claims things. This page is the one claim you can check: the reposit
 
 - **A bad deploy.** The workflow verifies (lint, typecheck, build, 20 tests) before it is allowed to deploy; the stack tests synthesise the template and assert the bucket is private and the API has one route.
 - **Form spam.** The honeypot drops bots silently; the API stage is throttled so a flood costs cents, not a mailbox.
-- **A leaked key.** There is none to leak: the Resend key lives in a GitHub environment secret and reaches only the Lambda environment.
+- **A leaked key.** There is none to leak: the Lambda sends through SES with its IAM role, allowed to send only from the site's verified domain.
 - **Cache after a release.** Each deploy uploads the exact build it synthesised against and invalidates the distribution.
 
 ## Decisions

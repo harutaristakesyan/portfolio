@@ -26,10 +26,12 @@ await esbuild.build({
   outbase: functionsRoot,
   bundle: true,
   platform: "node",
-  target: "node22",
+  target: "node24",
   format: "esm",
   outExtension: { ".js": ".mjs" },
   mainFields: ["module", "main"],
+  // The Node 24 Lambda runtime provides AWS SDK v3; bundling it would only add weight.
+  external: ["@aws-sdk/*"],
   treeShaking: true,
   minify: true,
   sourcemap: false,

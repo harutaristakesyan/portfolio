@@ -67,6 +67,10 @@ html {
   html {
     scroll-behavior: smooth;
   }
+  /* Cross-document view transitions: a cross-fade between pages with no JavaScript. */
+  @view-transition {
+    navigation: auto;
+  }
 }
 body {
   margin: 0;

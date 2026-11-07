@@ -3,9 +3,9 @@
   "private": true,
   "version": "2.0.0",
   "description": "Harut Aristakesyan — personal site on AWS (S3 + CloudFront, one Lambda for the contact form)",
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "pnpm --filter @portfolio/web dev",
@@ -22,16 +22,9 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.6",
-    "@types/node": "^22.15.0",
-    "lefthook": "^1.13.0",
-    "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lefthook",
-      "sharp"
-    ]
+    "@biomejs/biome": "^2.6.5",
+    "@types/node": "^24.19.2",
+    "lefthook": "^2.2.2",
+    "typescript": "^6.0.3"
   }
 }

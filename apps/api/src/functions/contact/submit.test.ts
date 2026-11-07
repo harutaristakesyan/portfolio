@@ -71,7 +71,7 @@ describe("POST /api/contact", () => {
   });
 
   it("returns 500 when mail fails, without leaking the reason", async () => {
-    vi.mocked(sendMail).mockRejectedValueOnce(new Error("resend: boom"));
+    vi.mocked(sendMail).mockRejectedValueOnce(new Error("ses: boom"));
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const res = await handler(event(valid));
     expect(res).toMatchObject({ statusCode: 500, body: JSON.stringify({ error: "internal" }) });

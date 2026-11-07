@@ -12,18 +12,19 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
   AWS_REGION: us-east-1
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:ci
@@ -42,30 +43,25 @@ jobs:
     env:
       CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
       CDK_DEFAULT_REGION: us-east-1
-      # Read by infra/bin/cdk.ts. DOMAIN may be empty: the site then serves from its CloudFront domain.
-      DOMAIN: ${{ vars.DOMAIN }}
+      # Read by infra/bin/cdk.ts; the domain itself is fixed in code.
       GOOGLE_DKIM_PUBLIC_KEY: ${{ vars.GOOGLE_DKIM_PUBLIC_KEY }}
-      CONTACT_TO: ${{ vars.CONTACT_TO }}
-      MAIL_FROM: ${{ vars.MAIL_FROM }}
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      - name: Build site with its public URL
-        env:
-          SITE_URL: ${{ vars.DOMAIN != '' && format('https://{0}', vars.DOMAIN) || vars.SITE_URL }}
+      - name: Build site
         run: pnpm build
 
       - name: Bundle Lambda functions
         run: pnpm bundle
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/portfolio-github-deploy-role
           aws-region: ${{ env.AWS_REGION }}

@@ -13,8 +13,8 @@ paths:
   stack read that list.
 - Validate every body with a Zod schema in the function folder (`functions/<name>/schema.ts`); respond with `ok()` only.
   Honeypot hits return `{ ok: true }` without side effects.
-- Config comes from the environment (`CONTACT_TO`, `MAIL_FROM`, `RESEND_API_KEY`). Never read
-  files, embed secrets or log request bodies.
+- Config comes from the environment (`CONTACT_TO`, `MAIL_FROM`). Mail goes through SES with the
+  Lambda's IAM role; there is no API key. Never read files, embed secrets or log request bodies.
 - `MAIL_TRANSPORT=log` turns mail into a console line for tests and local runs; never set it in Lambda.
 - Tests: `pnpm --filter @portfolio/api test` (Vitest, `sendMail` mocked). Add a test for each
   failure boundary: validation, honeypot, mail failure.

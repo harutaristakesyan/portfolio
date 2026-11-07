@@ -4,7 +4,7 @@ import { ContactSubmit } from "./schema.js";
 
 /**
  * POST /api/contact. Validates, drops honeypot hits silently, and emails the message.
- * No storage: the email is the record, and Resend keeps its own delivery log.
+ * No storage: the email is the record, and SES delivery errors land in the function's logs.
  */
 export const handler = handle(async (event) => {
   const { website, ...lead } = parseBody(event, ContactSubmit);

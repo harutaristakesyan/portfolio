@@ -46,6 +46,34 @@ test("no client, product or template names leak into the HTML", () => {
   }
 });
 
+test("HTML stays within the edge CSP (script-src 'self'; style-src 'self')", () => {
+  for (const file of walk(dist).filter((f) => f.endsWith(".html"))) {
+    const html = readFileSync(file, "utf8");
+    assert.doesNotMatch(html, /<style[\s>]/, `inline <style> in ${file}`);
+    assert.doesNotMatch(html, /\sstyle="/, `style="" attribute in ${file}`);
+    for (const [tag] of html.matchAll(/<script\b[^>]*>/g)) {
+      const allowed = /\ssrc="\/_astro\//.test(tag) || /type="application\/ld\+json"/.test(tag);
+      assert.ok(allowed, `inline script ${tag} in ${file}`);
+    }
+  }
+});
+
+test("fonts are preloaded from the same hashed files the stylesheet uses", () => {
+  const html = readFileSync(join(dist, "index.html"), "utf8");
+  const css = walk(join(dist, "_astro"))
+    .filter((f) => f.endsWith(".css"))
+    .map((f) => readFileSync(f, "utf8"))
+    .join("");
+  const preloads = [...html.matchAll(/<link rel="preload" href="([^"]+\.woff2)"/g)].map(
+    (m) => m[1],
+  );
+  assert.equal(preloads.length, 2);
+  for (const href of preloads) {
+    assert.ok(existsSync(join(dist, href)), `missing ${href}`);
+    assert.ok(css.includes(href), `${href} is not the file the stylesheet loads`);
+  }
+});
+
 test("pages are files without trailing slashes and link to each other that way", () => {
   const html = readFileSync(join(dist, "index.html"), "utf8");
   assert.match(html, /href="\/work\/[a-z0-9-]+"/);

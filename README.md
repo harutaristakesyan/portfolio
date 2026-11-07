@@ -5,8 +5,8 @@ everything in one AWS CDK stack and deployed from GitHub Actions through an OIDC
 shape as readymade.works, cut down to what a one-page portfolio needs.
 
 ```
-apps/web    Astro 5, static output, plain CSS, no client framework. Content in src/content/work.
-apps/api    Lambda handlers, one file per route. POST /api/contact → Resend email.
+apps/web    Astro 7, static output, plain CSS, no client framework. Content in src/content/work.
+apps/api    Lambda handlers, one file per route. POST /api/contact → SES email.
 infra       CDK: SiteStack (S3, CloudFront, HTTP API, Lambda, ACM, Route 53) + GithubOidcStack.
 ```
 
@@ -38,11 +38,12 @@ One-time setup, from a machine with AWS credentials for the account:
 1. `cdk bootstrap aws://<account>/us-east-1` if this account has not been bootstrapped (readymade did).
 2. `pnpm --filter @portfolio/infra deploy:oidc` — creates `portfolio-github-deploy-role`, trusted by
    this repository's `prod` environment in both `sub` forms GitHub can send (plain and with ids).
-3. In GitHub → Settings → Environments → `prod`, set variables `AWS_ACCOUNT_ID`, `CONTACT_TO`,
-   `MAIL_FROM`, optionally `GOOGLE_DKIM_PUBLIC_KEY` (harut.dev mail), and either `DOMAIN` (apex with a Route 53 hosted zone in the account) or `SITE_URL`
-   (the CloudFront URL, once known); secret `RESEND_API_KEY`.
-4. Push to `master`. The first deploy without `DOMAIN` prints `SiteUrl` (the CloudFront domain); set
-   `SITE_URL` to it so canonical URLs and the sitemap are right, or set `DOMAIN` and redeploy.
+3. In GitHub → Settings → Environments → `prod`, set variable `AWS_ACCOUNT_ID` and optionally
+   `GOOGLE_DKIM_PUBLIC_KEY` (harut.dev mail). No secrets: the Lambda sends through SES with its IAM
+   role. The domain `harut.dev` is fixed in `infra/bin/cdk.ts` and `apps/web/astro.config.ts` (its
+   Route 53 hosted zone is in the account); so are the sender `hello@harut.dev` and the contact-form
+   recipient `aristakesyan@harut.dev`, both on the SES-verified domain.
+4. Push to `master`, then send a test message through the form.
 
 Manual deploy, same inputs as environment variables: `pnpm build && pnpm deploy`.
 

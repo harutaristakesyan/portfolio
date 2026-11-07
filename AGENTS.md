@@ -28,7 +28,7 @@ branding on the pages. The contact form and CV download are the only calls to ac
   removed pages should get a redirect added to the function if they were linked anywhere.
 - One Lambda per route in `infra/lib/routes.ts`; construct ids are derived from the handler path
   and must not change. The handler reads config from the environment only.
-- Secrets never go into source, CloudFormation outputs or logs. `RESEND_API_KEY` arrives from the
-  GitHub environment secret.
-- Node 22 ARM64, us-east-1, pnpm. Run `pnpm check`, `pnpm typecheck`, `pnpm build`, `pnpm test`
+- Secrets never go into source, CloudFormation outputs or logs. Mail goes through SES with the
+  Lambda's IAM role, so the app has no API keys; keep it that way.
+- Node 24 ARM64, us-east-1, pnpm. Run `pnpm check`, `pnpm typecheck`, `pnpm build`, `pnpm test`
   before pushing. Deploy only when asked; `master` deploys automatically.

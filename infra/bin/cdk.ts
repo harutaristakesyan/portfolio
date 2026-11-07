@@ -15,7 +15,10 @@ new SiteStack(app, "portfolio", {
     process.env.DOMAIN === "harut.dev"
       ? {
           siteVerification: "google-site-verification=mt6SPSOzRqUsCMFfYWUj3IfZjrdupK1oDzyrNz9nUQ0",
-          dkimPublicKey: process.env.GOOGLE_DKIM_PUBLIC_KEY || undefined,
+          // Public 2048-bit DKIM key generated in the Admin console on 7 Nov 2026; the private key stays with Google.
+          dkimPublicKey:
+            process.env.GOOGLE_DKIM_PUBLIC_KEY ||
+            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmiITj9eTDMSZ/BJCOeu+MuyMAXxokq6++KvWaAl4yDatp2h4fn/LfU+Zsj2jRZWpWmmddc1it3Bg56P+lyw9A3LvDEJX7+nrbl5juzR87isBwUL8q+EVDM88aKy4Vigy81id4cMJHhV7yagu7CVUH/ByxrNZ+5805EQ+nUhcDiEuoBHhDjRZU0ubaAWXId6kGkvBolIFfBjDg5/vUfML6j8UMugCW4HeYo0p9c64h2janVEcjGM+mOgWkMXL5sa+RnF6CGGgIlJtebBjhTRcC5GDq8FG2XxQfhJJOr+KSy1rZE/cGH0+9w72E7hpBcTv0Wub07SOvCZPN7MkIiBHKQIDAQAB",
         }
       : undefined,
   contactTo: process.env.CONTACT_TO ?? "harut.aristakesyan@gmail.com",

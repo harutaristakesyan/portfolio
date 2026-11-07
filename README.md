@@ -23,7 +23,9 @@ pnpm typecheck
 
 Editing content: cases live in `apps/web/src/content/work/*.md` (frontmatter is validated by
 `src/content.config.ts`), everything else the pages say is in `apps/web/src/data/site.ts`.
-`node apps/web/scripts/og.mjs` regenerates the social image. Replace `apps/web/public/resume.pdf`
+`pnpm --filter @portfolio/web brand` regenerates the brand exports, all icons and the social image.
+The canonical logo is `apps/web/public/brand/monogram.svg`; see [brand notes](docs/brand/README.md).
+Replace `apps/web/public/resume.pdf`
 to update the CV download.
 
 ## Deploy

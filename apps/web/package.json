@@ -4,6 +4,7 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
+    "brand": "node scripts/brand.mjs && node scripts/og.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

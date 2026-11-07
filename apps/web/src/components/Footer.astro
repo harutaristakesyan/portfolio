@@ -1,11 +1,13 @@
 ---
 import { site } from "@/data/site";
+import Brand from "@/components/Brand.astro";
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
   <div class="wrap">
+    <Brand footer />
     <p>
       <a href={`mailto:${site.email}`}>{site.email}</a>
       <span class="sep" aria-hidden="true">·</span>

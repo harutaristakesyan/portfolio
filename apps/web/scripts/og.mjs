@@ -1,19 +1,57 @@
-// Renders public/og.png (1200×630) from inline SVG. Run: node scripts/og.mjs
-import { writeFileSync } from "node:fs";
+// Render the social preview with the site's actual font and vector. Run: pnpm --filter @portfolio/web brand
+import { readFileSync } from "node:fs";
 import sharp from "sharp";
 
-const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#0e0f11"/>
-  <rect x="72" y="72" width="64" height="64" rx="18" fill="#9fcbe0"/>
-  <text x="104" y="116" text-anchor="middle" font-family="Manrope, Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#0e0f11" letter-spacing="-1">HA</text>
-  <text x="72" y="300" font-family="Manrope, Arial, Helvetica, sans-serif" font-size="64" font-weight="500" fill="#ecebe6" letter-spacing="-2">Harut Aristakesyan</text>
-  <text x="72" y="372" font-family="Manrope, Arial, Helvetica, sans-serif" font-size="34" fill="#9a9b97">Backend engineer · TypeScript on AWS serverless · Java/Spring Boot</text>
-  <text x="72" y="430" font-family="Manrope, Arial, Helvetica, sans-serif" font-size="34" fill="#9a9b97">Integrations that keep working when something upstream fails.</text>
-  <line x1="72" y1="500" x2="1128" y2="500" stroke="#24262b" stroke-width="2"/>
-  <text x="72" y="556" font-family="JetBrains Mono, Menlo, monospace" font-size="24" fill="#9fcbe0">harut.dev · 7+ years in production · remote · UTC+4</text>
-</svg>`;
+const publicDir = new URL("../public/", import.meta.url);
+const fontfile = new URL(
+  "../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2",
+  import.meta.url,
+).pathname;
+const mark = readFileSync(new URL("brand/monogram.svg", publicDir));
+const monofile = new URL(
+  "../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  import.meta.url,
+).pathname;
 
-const png = await sharp(Buffer.from(svg)).png().toBuffer();
-writeFileSync(new URL("../public/og.png", import.meta.url), png);
-console.log(`og.png ${png.length} bytes`);
+async function text(value, size, color, left, top, mono = false) {
+  const input = await sharp({
+    text: {
+      text: `<span foreground="${color}">${value}</span>`,
+      font: `${mono ? "JetBrains Mono" : "Manrope"} ${size}`,
+      fontfile: mono ? monofile : fontfile,
+      rgba: true,
+      dpi: 72,
+    },
+  })
+    .png()
+    .toBuffer();
+  return { input, left, top };
+}
+
+await sharp({ create: { width: 400, height: 128, channels: 4, background: "#00000000" } })
+  .composite([
+    { input: await sharp(mark).resize(144, 120).png().toBuffer(), left: 0, top: 4 },
+    await text("harut.dev", 36, "#ecebe6", 160, 44, true),
+  ])
+  .png()
+  .toFile(new URL("brand/wordmark.png", publicDir).pathname);
+
+await sharp({ create: { width: 1200, height: 630, channels: 4, background: "#0e0f11" } })
+  .composite([
+    { input: await sharp(mark).resize(96, 80).png().toBuffer(), left: 61, top: 62 },
+    await text("harut.dev", 28, "#ecebe6", 176, 86, true),
+    await text("Harut Aristakesyan", 60, "#ecebe6", 72, 238),
+    await text("Backend engineer", 34, "#9a9b97", 72, 328),
+    await text("TypeScript / AWS serverless / Java / Spring Boot", 28, "#9a9b97", 72, 390),
+    {
+      input: Buffer.from(
+        '<svg width="1056" height="2"><path stroke="#24262b" stroke-width="2" d="M0 1h1056"/></svg>',
+      ),
+      left: 72,
+      top: 474,
+    },
+    await text("7+ years in production / remote / UTC+4", 24, "#9fcbe0", 72, 518, true),
+  ])
+  .png()
+  .toFile(new URL("og.png", publicDir).pathname);
+console.log("og.png generated (1200×630).");

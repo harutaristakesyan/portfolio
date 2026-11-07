@@ -1,0 +1,14 @@
+---
+import { site } from "@/data/site";
+
+interface Props {
+  footer?: boolean;
+}
+
+const { footer = false } = Astro.props;
+---
+
+<a class:list={["brand", { "brand-footer": footer }]} href="/" aria-label={`${site.name} — home`}>
+  <img class="brand-mark" src="/brand/monogram.svg" width="48" height="40" alt="" />
+  <span class="brand-name">harut.dev</span>
+</a>

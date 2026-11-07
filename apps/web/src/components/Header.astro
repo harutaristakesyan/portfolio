@@ -1,5 +1,6 @@
 ---
 import { site } from "@/data/site";
+import Brand from "@/components/Brand.astro";
 
 const links = [
   { href: "/#work", label: "work" },
@@ -10,13 +11,12 @@ const links = [
 
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href="/" aria-label={`${site.name} — home`}>
-      <span class="dot" aria-hidden="true"></span>
-      <span class="brand-name">harut.dev</span>
-    </a>
+    <Brand />
     <nav aria-label="Primary">
       {links.map((l) => <a href={l.href}>{l.label}</a>)}
-      <a class="btn btn-ghost btn-small" href={site.cv} download>cv.pdf</a>
+      <a class="btn btn-ghost btn-small" href={site.cv} aria-label="Download CV" download>
+        <span>cv<span class="cv-extension">.pdf</span></span>
+      </a>
     </nav>
   </div>
 </header>

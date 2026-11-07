@@ -2,21 +2,21 @@
 import { site } from "@/data/site";
 
 const links = [
-  { href: "/#work", label: "Work" },
-  { href: "/#experience", label: "Experience" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/#work", label: "work" },
+  { href: "/#experience", label: "experience" },
+  { href: "/#contact", label: "contact" },
 ];
 ---
 
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="/" aria-label={`${site.name} — home`}>
-      <span class="mark" aria-hidden="true">HA</span>
-      <span class="brand-name">{site.name}</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="brand-name">harut.dev</span>
     </a>
     <nav aria-label="Primary">
       {links.map((l) => <a href={l.href}>{l.label}</a>)}
-      <a class="btn btn-small" href={site.cv} download>CV</a>
+      <a class="btn btn-ghost btn-small" href={site.cv} download>cv.pdf</a>
     </nav>
   </div>
 </header>

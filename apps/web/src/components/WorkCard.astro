@@ -3,19 +3,18 @@ import type { CollectionEntry } from "astro:content";
 
 interface Props {
   entry: CollectionEntry<"work">;
+  index: number;
 }
 
-const { entry } = Astro.props;
+const { entry, index } = Astro.props;
 const { title, summary, period, stack } = entry.data;
 ---
 
-<li class="work-card">
+<li>
   <a href={`/work/${entry.id}`}>
-    <p class="eyebrow">{period}</p>
+    <span class="index">{String(index).padStart(2, "0")}</span>
     <h3>{title}</h3>
-    <p>{summary}</p>
-    <ul class="tags" aria-label="Stack">
-      {stack.slice(0, 4).map((s) => <li>{s}</li>)}
-    </ul>
+    <p class="summary">{summary}</p>
+    <span class="meta">{period}<br />{stack.slice(0, 3).join(" · ")}</span>
   </a>
 </li>

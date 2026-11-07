@@ -1,0 +1,31 @@
+---
+import { site, status } from "@/data/site";
+---
+
+<p class="status" data-tz={site.timezone}>
+  <span><span class="ok">●</span> <strong>{status.availability}</strong></span>
+  <span>Yerevan <strong data-clock="local">--:--</strong></span>
+  <span>New York <strong data-clock="America/New_York">--:--</strong></span>
+  <span>overlap <strong>{status.overlap}</strong></span>
+</p>
+
+<script>
+  const line = document.querySelector<HTMLElement>(".status");
+  if (line) {
+    const local = line.dataset.tz ?? "UTC";
+    const clocks = line.querySelectorAll<HTMLElement>("[data-clock]");
+    const tick = () => {
+      const now = new Date();
+      for (const c of clocks) {
+        const zone = c.dataset.clock === "local" ? local : c.dataset.clock;
+        c.textContent = new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: zone,
+        }).format(now);
+      }
+    };
+    tick();
+    setInterval(tick, 30_000);
+  }
+</script>

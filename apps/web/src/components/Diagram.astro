@@ -1,0 +1,134 @@
+---
+/**
+ * Architecture diagram rendered from grid data in a case's frontmatter. Nodes sit on a
+ * (col, row) grid; edges are drawn left→right or top→bottom with a small arrowhead. One style
+ * for every case, so the diagrams read as a set.
+ */
+export interface DiagramNode {
+  id: string;
+  label: string;
+  sub?: string;
+  col: number;
+  row: number;
+  kind?: "ext" | "key";
+}
+export interface DiagramEdge {
+  from: string;
+  to: string;
+  label?: string;
+  kind?: "key" | "dashed";
+}
+interface Props {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+  caption: string;
+}
+
+const { nodes, edges, caption } = Astro.props;
+
+const COL = 216;
+const ROW = 92;
+const W = 148;
+const H = 50;
+const PAD = 8;
+
+const cols = Math.max(...nodes.map((n) => n.col)) + 1;
+const rows = Math.max(...nodes.map((n) => n.row)) + 1;
+const width = cols * COL - (COL - W) + PAD * 2;
+const height = rows * ROW - (ROW - H) + PAD * 2 + 16; // room for labels under the last row
+
+const pos = new Map(
+  nodes.map((n) => [n.id, { x: PAD + n.col * COL, y: PAD + n.row * ROW, ...n }] as const),
+);
+
+function path(e: DiagramEdge): {
+  d: string;
+  lx: number;
+  ly: number;
+  anchor: "middle" | "start";
+  marker: string;
+} {
+  const a = pos.get(e.from);
+  const b = pos.get(e.to);
+  if (!a || !b) throw new Error(`diagram edge ${e.from} → ${e.to} references an unknown node`);
+  const marker = e.kind === "key" ? "url(#arrow-key)" : "url(#arrow)";
+  if (a.col !== b.col) {
+    // Horizontal: right edge of a → left edge of b, with a gentle S-curve across rows.
+    const x1 = a.x + W;
+    const y1 = a.y + H / 2;
+    const x2 = b.x;
+    const y2 = b.y + H / 2;
+    const cx = (x1 + x2) / 2;
+    const sameRow = a.row === b.row;
+    return {
+      d: `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`,
+      // Same-row labels sit under the gap between the nodes; cross-row labels sit just before the target so
+      // two curves sharing a gap never stack their labels on the same spot.
+      lx: sameRow ? cx : x2 - 10,
+      ly: sameRow ? a.y + H + 13 : y2 - 8,
+      anchor: sameRow ? "middle" : "end",
+      marker,
+    };
+  }
+  // Vertical within one column.
+  const down = b.row > a.row;
+  const x = a.x + W / 2;
+  const y1 = down ? a.y + H : a.y;
+  const y2 = down ? b.y : b.y + H;
+  return { d: `M ${x} ${y1} L ${x} ${y2}`, lx: x + 8, ly: (y1 + y2) / 2 + 3, anchor: "start", marker };
+}
+---
+
+<div class="diagram-block">
+  <div class="wrap">
+    <figure>
+      <figcaption><span>{caption}</span><span>architecture</span></figcaption>
+      <div>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={caption}>
+        <defs>
+          <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="arrow" d="M 0 0 L 8 4 L 0 8 z"></path>
+          </marker>
+          <marker id="arrow-key" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="arrow key" d="M 0 0 L 8 4 L 0 8 z"></path>
+          </marker>
+        </defs>
+        {
+          edges.map((e) => {
+            const p = path(e);
+            return (
+              <g>
+                <path class={`edge ${e.kind ?? ""}`} d={p.d} marker-end={p.marker} />
+                {e.label && (
+                  <text class="edge-label" x={p.lx} y={p.ly} text-anchor={p.anchor}>
+                    {e.label}
+                  </text>
+                )}
+              </g>
+            );
+          })
+        }
+        {
+          nodes.map((n) => {
+            const p = pos.get(n.id);
+            if (!p) return null;
+            return (
+              <g class={`node ${n.kind ?? ""}`}>
+                <rect x={p.x} y={p.y} width={W} height={H} rx="6" />
+                <text x={p.x + 12} y={p.y + (n.sub ? 21 : 29)}>
+                  {n.label}
+                </text>
+                {n.sub && (
+                  <text class="sub" x={p.x + 12} y={p.y + 37}>
+                    {n.sub}
+                  </text>
+                )}
+              </g>
+            );
+          })
+        }
+      </svg>
+      </div>
+    </figure>
+  </div>
+</div>

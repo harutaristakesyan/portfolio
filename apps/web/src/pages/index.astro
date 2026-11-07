@@ -1,8 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 import ContactForm from "@/components/ContactForm.astro";
+import StatusLine from "@/components/StatusLine.astro";
 import WorkCard from "@/components/WorkCard.astro";
-import { experience, facts, hero, ownProducts, principles, site, stack } from "@/data/site";
+import { artefacts, experience, hero, ownProducts, site, stack } from "@/data/site";
 import Base from "@/layouts/Base.astro";
 
 const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.order);
@@ -11,44 +12,34 @@ const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.
 <Base>
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">{site.name} · {site.location}</p>
-      <h1>{hero.heading}</h1>
-      <p class="lead">{hero.lead}</p>
+      <p class="label">{site.name} · {site.location} · UTC+4</p>
+      <h1>{hero.who}</h1>
+      <p class="lead">{hero.now}</p>
       <div class="cta-row">
-        <a class="btn" href="#contact">Get in touch</a>
+        <a class="btn" href="#contact">Start a conversation</a>
         <a class="btn btn-ghost" href={site.cv} download>Download CV</a>
-        <a class="link-plain" href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a>
-        <a class="link-plain" href={site.github} rel="me noopener" target="_blank">GitHub</a>
+        <a class="btn btn-ghost" href={site.github} rel="me noopener" target="_blank">GitHub</a>
+        <a class="btn btn-ghost" href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a>
       </div>
-      <ul class="facts" aria-label="Facts">
-        {
-          facts.map((f) => (
-            <li>
-              <strong>{f.value}</strong>
-              <span>{f.label}</span>
-            </li>
-          ))
-        }
-      </ul>
+      <StatusLine />
     </div>
   </section>
 
   <section id="work" class="section">
     <div class="wrap">
-      <h2>Selected work</h2>
-      <p class="muted">
-        Named by what was built and which problem it solved. Client and product names stay private;
-        happy to walk through any of these on a call.
-      </p>
-      <ul class="work-grid">
-        {work.map((entry) => <WorkCard entry={entry} />)}
-      </ul>
-      <h3 class="subhead">Own products</h3>
-      <ul class="plain-list">
+      <div class="section-head">
+        <h2>Work</h2>
+        <span class="mono">{String(work.length).padStart(2, "0")} write-ups · architecture · failure modes · decisions</span>
+      </div>
+      <ol class="work-list">
+        {work.map((entry, i) => <WorkCard entry={entry} index={i + 1} />)}
+      </ol>
+      <ul class="own-products">
         {
           ownProducts.map((p) => (
             <li>
-              <strong>{p.title}.</strong> {p.text}
+              <strong>{p.title}</strong>
+              {p.text}
             </li>
           ))
         }
@@ -56,38 +47,43 @@ const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.
     </div>
   </section>
 
-  <section class="section paper">
+  <section id="how" class="section">
     <div class="wrap">
-      <h2>How I work</h2>
-      <ul class="principles">
+      <div class="section-head">
+        <h2>How I work</h2>
+        <span class="mono">the actual artefacts, not principles</span>
+      </div>
+      <div class="artefacts">
         {
-          principles.map((p) => (
-            <li>
-              <h3>{p.title}</h3>
-              <p>{p.text}</p>
-            </li>
+          artefacts.map((a) => (
+            <article class="artefact">
+              <header>
+                <span>{a.title}</span>
+                <span>{a.meta}</span>
+              </header>
+              <pre set:html={a.body} />
+            </article>
           ))
         }
-      </ul>
+      </div>
     </div>
   </section>
 
   <section id="experience" class="section">
     <div class="wrap">
-      <h2>Experience</h2>
+      <div class="section-head">
+        <h2>Experience</h2>
+        <span class="mono">2019 — now</span>
+      </div>
       <ol class="timeline">
         {
           experience.map((job) => (
             <li>
-              <p class="eyebrow">{job.period}</p>
-              <h3>
-                {job.role} <span class="muted">· {job.company}</span>
+              <span class="when">{job.period}</span>
+              <h3 class="role">
+                {job.role} <span>· {job.company}</span>
               </h3>
-              <ul class="plain-list">
-                {job.points.map((pt) => (
-                  <li>{pt}</li>
-                ))}
-              </ul>
+              <p>{job.summary}</p>
             </li>
           ))
         }
@@ -95,9 +91,12 @@ const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.
     </div>
   </section>
 
-  <section class="section paper">
+  <section class="section">
     <div class="wrap">
-      <h2>Stack</h2>
+      <div class="section-head">
+        <h2>Stack</h2>
+        <span class="mono">what I reach for, in order</span>
+      </div>
       <dl class="stack">
         {
           stack.map((g) => (
@@ -113,10 +112,13 @@ const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.
 
   <section id="contact" class="section">
     <div class="wrap narrow">
-      <h2>Contact</h2>
+      <div class="section-head">
+        <h2>Contact</h2>
+        <span class="mono">reply within one business day</span>
+      </div>
       <p class="muted">
-        Tell me what you are building and what is getting in the way. I reply within one business
-        day with questions or a first plan.
+        Tell me what you are building and what is getting in the way. You get questions or a first
+        plan back, not a sales call.
       </p>
       <ContactForm />
     </div>

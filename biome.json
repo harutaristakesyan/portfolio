@@ -16,7 +16,8 @@
       "!**/.astro",
       "!**/.lambda",
       "!pnpm-lock.yaml",
-      "!**/*.astro"
+      "!**/*.astro",
+      "!**/*.md"
     ]
   },
   "formatter": {

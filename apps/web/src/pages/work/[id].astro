@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import Diagram from "@/components/Diagram.astro";
 import Base from "@/layouts/Base.astro";
 
 export async function getStaticPaths() {
@@ -9,27 +10,30 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const { title, summary, role, period, stack } = entry.data;
+const { title, summary, role, period, duration, stack, diagram } = entry.data;
 ---
 
 <Base title={title} description={summary}>
-  <article class="case">
-    <header class="hero">
+  <article>
+    <header class="case-hero">
       <div class="wrap narrow">
-        <p class="eyebrow"><a href="/#work">← All work</a></p>
+        <a class="back mono" href="/#work">← work</a>
         <h1>{title}</h1>
         <p class="lead">{summary}</p>
         <dl class="case-meta">
           <div><dt>Role</dt><dd>{role}</dd></div>
-          <div><dt>Period</dt><dd>{period}</dd></div>
+          <div><dt>When</dt><dd>{period}</dd></div>
+          <div><dt>Duration</dt><dd>{duration}</dd></div>
           <div><dt>Stack</dt><dd>{stack.join(" · ")}</dd></div>
         </dl>
       </div>
     </header>
+    <Diagram nodes={diagram.nodes} edges={diagram.edges} caption={diagram.caption} />
     <div class="wrap narrow prose">
       <Content />
       <p class="case-cta">
         <a class="btn" href="/#contact">Discuss a similar project</a>
+        <a class="mono" href="/#work">all write-ups →</a>
       </p>
     </div>
   </article>

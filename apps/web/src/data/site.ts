@@ -9,33 +9,62 @@ export const site = {
   email: "harut.aristakesyan@gmail.com",
   linkedin: "https://www.linkedin.com/in/harutaristakesyan/",
   github: "https://github.com/harutaristakesyan",
+  repo: "https://github.com/harutaristakesyan/portfolio",
   cv: "/resume.pdf",
-  location: "Yerevan, Armenia · UTC+4",
+  location: "Yerevan, Armenia",
+  timezone: "Asia/Yerevan",
 } as const;
 
 export const hero = {
-  heading: "I build backends and integrations that keep working when something upstream fails.",
-  lead: "Backend engineer, 7+ years in production. TypeScript on AWS serverless for the last few years, Java and Spring Boot services before that. Remote, overlapping US and EU working hours.",
+  /** Two plain sentences: who, and what is on the desk right now. No slogan. */
+  who: "Backend engineer. Seven years of production systems; the last few on TypeScript and AWS serverless, before that Java and Spring Boot.",
+  now: "Currently building a booking-to-billing integration on Lambda, SQS and Stripe, and taking on one more remote contract from December.",
 } as const;
 
-export const facts = [
-  { value: "7+", label: "years in production systems" },
-  { value: "2020", label: "working with remote clients since" },
-  { value: "UTC+4", label: "overlaps US Eastern and EU hours" },
-] as const;
+export const status = {
+  availability: "available from Dec 2026",
+  /** Shown next to the live clocks. */
+  overlap: "09:00–15:00 ET daily",
+} as const;
 
-export const principles = [
+/** Working artefacts, shown as they are instead of a list of principles. */
+export const artefacts = [
   {
-    title: "Reliability before features",
-    text: "Webhooks arrive twice, rate limits change, a refund lands after the report is built. I design for that first: idempotent writes, retries, dead-letter queues and a replay path.",
+    title: "week 1, every project",
+    meta: "plan",
+    body: `<b>day 1–2</b>  read the code, trace one
+         real request end to end
+<b>day 3</b>    written scope: stages,
+         acceptance, fixed price each
+<b>day 4–5</b>  first PR merged: smallest
+         useful change, with tests
+<b>friday</b>   update (see right),
+         staging URL if there is one`,
   },
   {
-    title: "Small, reviewable steps",
-    text: "Short PRs with tests on the paths that matter, a staging URL before the final payment on each stage, and no surprises in production.",
+    title: "friday update",
+    meta: "message · weekly",
+    body: `<b>done</b>    3 PRs: idempotent intake,
+        DLQ + replay command
+<b>next</b>    Stripe invoices from
+        confirmed stays
+<b>risk</b>    partner B sends updates
+        before create; handled in
+        queue, nothing needed from you
+<b>decide</b>  invoice per stay, or
+        monthly roll-up? (thread)`,
   },
   {
-    title: "Your code, your accounts",
-    text: "Everything lives in your repositories and your cloud account from day one. When the work is done, nothing depends on me.",
+    title: "PR description",
+    meta: "template",
+    body: `<b>what</b>      one sentence
+<b>why</b>       the failure this prevents,
+          or what it enables
+<b>how</b>       the decision, and what
+          I chose not to do
+<b>test</b>      which path is covered,
+          how to run it
+<b>rollback</b>  one line`,
   },
 ] as const;
 
@@ -43,68 +72,52 @@ export interface Experience {
   role: string;
   company: string;
   period: string;
-  points: string[];
+  summary: string;
 }
 
 export const experience: Experience[] = [
   {
     role: "Lead Software Engineer",
     company: "EPAM Systems",
-    period: "Jul 2022 — present",
-    points: [
-      "Deliver enterprise Java services end to end: architecture, estimation, implementation, production support.",
-      "Drive service boundaries, domain modelling and event-driven integration across teams.",
-      "Moved a legacy platform onto AWS with serverless and managed services, adding Node.js and React next to the Java core.",
-      "Own the CI/CD pipelines, coding and testing standards; review and mentor.",
-    ],
+    period: "2022 — now",
+    summary:
+      "Enterprise Java services end to end: architecture, estimation, delivery, production support. Moved a legacy platform onto AWS with serverless and managed services; own the pipelines and the team's testing standards.",
   },
   {
-    role: "Senior Software Engineer (contract)",
+    role: "Senior Software Engineer, contract",
     company: "IUNetworks",
-    period: "Aug 2021 — May 2023",
-    points: [
-      "Owned Spring Boot microservices running core business operations.",
-      "Replaced synchronous coupling with messaging over Kafka and ActiveMQ to isolate failures.",
-      "Profiling-driven query and algorithm optimisation across SQL and NoSQL stores.",
-      "Integration testing with JUnit, Mockito and Testcontainers.",
-    ],
+    period: "2021 — 2023",
+    summary:
+      "Spring Boot microservices for core business operations. Replaced synchronous coupling with Kafka and ActiveMQ; profiling-driven query optimisation; Testcontainers-based integration tests.",
   },
   {
-    role: "Software Engineer (freelance)",
+    role: "Software Engineer, freelance",
     company: "Upwork",
-    period: "Dec 2020 — present",
-    points: [
-      "Spring Boot, Micronaut and TypeScript backends for international clients, from requirements to deployment and support.",
-      "Long-running relationships and repeat contracts alongside full-time roles.",
-    ],
+    period: "2020 — now",
+    summary:
+      "Spring Boot, Micronaut and TypeScript backends for remote clients, requirements to deployment and support. Repeat contracts alongside full-time roles.",
   },
   {
     role: "Java Backend Developer",
     company: "ITHD",
-    period: "Jul 2019 — Dec 2020",
-    points: [
-      "Backend services with Spring Boot, Hibernate and REST APIs.",
-      "Automated testing with JUnit and Mockito; feature work with cross-functional teams.",
-    ],
+    period: "2019 — 2020",
+    summary: "Spring Boot, Hibernate and REST APIs; automated testing with JUnit and Mockito.",
   },
 ];
 
 export const stack = [
-  {
-    group: "Languages",
-    items: ["TypeScript", "Java", "SQL", "Swift"],
-  },
+  { group: "Languages", items: ["TypeScript", "Java", "SQL", "Swift"] },
   {
     group: "AWS",
     items: [
       "Lambda",
       "API Gateway",
+      "SQS / SNS",
       "DynamoDB",
-      "Aurora Serverless",
+      "Aurora",
       "S3",
       "CloudFront",
       "Cognito",
-      "SQS / SNS",
       "CDK",
       "SST",
     ],
@@ -113,18 +126,12 @@ export const stack = [
     group: "Backend",
     items: ["Node.js", "Spring Boot", "Micronaut", "REST", "gRPC", "GraphQL", "Kafka", "ActiveMQ"],
   },
-  {
-    group: "Data",
-    items: ["PostgreSQL", "MySQL", "MongoDB", "DynamoDB"],
-  },
+  { group: "Data", items: ["PostgreSQL", "MySQL", "MongoDB", "DynamoDB"] },
   {
     group: "Delivery",
     items: ["GitHub Actions", "GitLab CI", "Docker", "Kubernetes", "Testcontainers", "Vitest"],
   },
-  {
-    group: "Frontend",
-    items: ["React", "Next.js", "Astro", "Angular", "SwiftUI"],
-  },
+  { group: "Frontend", items: ["React", "Next.js", "Astro", "Angular", "SwiftUI"] },
 ] as const;
 
 export const ownProducts = [

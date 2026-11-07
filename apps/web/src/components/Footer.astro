@@ -9,10 +9,12 @@ const year = new Date().getFullYear();
     <p>
       <a href={`mailto:${site.email}`}>{site.email}</a>
       <span class="sep" aria-hidden="true">·</span>
-      <a href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a>
+      <a href={site.linkedin} rel="me noopener" target="_blank">linkedin</a>
       <span class="sep" aria-hidden="true">·</span>
-      <a href={site.github} rel="me noopener" target="_blank">GitHub</a>
+      <a href={site.github} rel="me noopener" target="_blank">github</a>
+      <span class="sep" aria-hidden="true">·</span>
+      <a href={site.repo} rel="noopener" target="_blank">source of this site</a>
     </p>
-    <p class="muted">© {year} {site.fullName}. {site.location}.</p>
+    <p>© {year} {site.fullName} · {site.location}</p>
   </div>
 </footer>

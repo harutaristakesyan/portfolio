@@ -87,7 +87,7 @@ describe("SiteStack without a domain", () => {
     const fns = t.findResources("AWS::CloudFront::Function");
     const code = String(Object.values(fns)[0]?.Properties.FunctionCode);
     expect(code).toContain('"/work/case.html"');
-    expect(code).toContain('"/404.html"');
+    expect(code).not.toContain('req.uri = "/404.html"');
     expect(code).toContain('"/api/contact"');
     expect(code).not.toContain("www.");
   });

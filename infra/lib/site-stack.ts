@@ -148,8 +148,8 @@ export class SiteStack extends Stack {
           }
           if (uri === "/") req.uri = "/index.html";
           else if (uri.indexOf(".") === -1) req.uri = uri + ".html";
-          // Unknown pages get the 404 page with a real 404 status, not a cached S3 403.
-          if (req.uri.endsWith(".html") && htmlPaths.indexOf(req.uri) === -1) req.uri = "/404.html";
+          // Unknown pages stay unknown: S3 answers 403 for a missing key and the distribution's
+          // error response turns that into /404.html with a real 404 status.
           return req;
         }`),
     });
@@ -220,7 +220,7 @@ export class SiteStack extends Stack {
         ],
       },
       additionalBehaviors: Object.fromEntries(apiPaths.map((p) => [p, apiBehavior])),
-      // The function already maps unknown pages to /404.html; this fixes the status code S3 returns for it.
+      // A missing object is a 403 from S3 behind origin access control; both become the 404 page.
       errorResponses: [
         { httpStatus: 403, responseHttpStatus: 404, responsePagePath: "/404.html" },
         { httpStatus: 404, responseHttpStatus: 404, responsePagePath: "/404.html" },

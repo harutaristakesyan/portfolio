@@ -16,7 +16,7 @@ paths:
   block, which Astro emits as an external module.
 - Styling is plain CSS in `src/styles/global.css` with the existing tokens; no Tailwind.
 - The contact form posts JSON to `/api/contact`; field names are a contract with
-  `apps/api/src/contracts.ts`. In `astro dev` the request is answered by `dev/contact-mock.ts`.
+  `apps/api/src/functions/contact/schema.ts`. In `astro dev` the request is answered by `dev/contact-mock.ts`.
 - After changes: `pnpm --filter @portfolio/web typecheck`, `pnpm build`, `pnpm --filter @portfolio/web test`
   (the test runs against `dist` and fails on leaked client names; extend its list for new cases).
 - Replace `public/resume.pdf` only when Harut hands over a new CV; `node scripts/og.mjs` regenerates

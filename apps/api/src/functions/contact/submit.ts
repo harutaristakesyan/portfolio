@@ -1,6 +1,6 @@
-import { ContactSubmit } from "../../contracts.js";
 import { handle, ok, parseBody } from "../../http.js";
 import { contactNotification, sendMail } from "../../mail.js";
+import { ContactSubmit } from "./schema.js";
 
 /**
  * POST /api/contact. Validates, drops honeypot hits silently, and emails the message.

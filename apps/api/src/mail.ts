@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import type { ContactSubmit } from "./contracts.js";
+import type { ContactSubmit } from "./functions/contact/schema.js";
 
 let client: Resend | undefined;
 const resend = () => {

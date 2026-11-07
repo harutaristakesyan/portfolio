@@ -1,0 +1,124 @@
+---
+import { getCollection } from "astro:content";
+import ContactForm from "@/components/ContactForm.astro";
+import WorkCard from "@/components/WorkCard.astro";
+import { experience, facts, hero, ownProducts, principles, site, stack } from "@/data/site";
+import Base from "@/layouts/Base.astro";
+
+const work = (await getCollection("work")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">{site.name} · {site.location}</p>
+      <h1>{hero.heading}</h1>
+      <p class="lead">{hero.lead}</p>
+      <div class="cta-row">
+        <a class="btn" href="#contact">Get in touch</a>
+        <a class="btn btn-ghost" href={site.cv} download>Download CV</a>
+        <a class="link-plain" href={site.linkedin} rel="me noopener" target="_blank">LinkedIn</a>
+        <a class="link-plain" href={site.github} rel="me noopener" target="_blank">GitHub</a>
+      </div>
+      <ul class="facts" aria-label="Facts">
+        {
+          facts.map((f) => (
+            <li>
+              <strong>{f.value}</strong>
+              <span>{f.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="work" class="section">
+    <div class="wrap">
+      <h2>Selected work</h2>
+      <p class="muted">
+        Named by what was built and which problem it solved. Client and product names stay private;
+        happy to walk through any of these on a call.
+      </p>
+      <ul class="work-grid">
+        {work.map((entry) => <WorkCard entry={entry} />)}
+      </ul>
+      <h3 class="subhead">Own products</h3>
+      <ul class="plain-list">
+        {
+          ownProducts.map((p) => (
+            <li>
+              <strong>{p.title}.</strong> {p.text}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section paper">
+    <div class="wrap">
+      <h2>How I work</h2>
+      <ul class="principles">
+        {
+          principles.map((p) => (
+            <li>
+              <h3>{p.title}</h3>
+              <p>{p.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="experience" class="section">
+    <div class="wrap">
+      <h2>Experience</h2>
+      <ol class="timeline">
+        {
+          experience.map((job) => (
+            <li>
+              <p class="eyebrow">{job.period}</p>
+              <h3>
+                {job.role} <span class="muted">· {job.company}</span>
+              </h3>
+              <ul class="plain-list">
+                {job.points.map((pt) => (
+                  <li>{pt}</li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section paper">
+    <div class="wrap">
+      <h2>Stack</h2>
+      <dl class="stack">
+        {
+          stack.map((g) => (
+            <div>
+              <dt>{g.group}</dt>
+              <dd>{g.items.join(" · ")}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <div class="wrap narrow">
+      <h2>Contact</h2>
+      <p class="muted">
+        Tell me what you are building and what is getting in the way. I reply within one business
+        day with questions or a first plan.
+      </p>
+      <ContactForm />
+    </div>
+  </section>
+</Base>

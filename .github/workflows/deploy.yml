@@ -1,0 +1,78 @@
+name: Deploy
+
+# One environment, one branch: every push to master verifies and deploys to production.
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  AWS_REGION: us-east-1
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:ci
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+
+  deploy:
+    needs: [verify]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: prod
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    env:
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      CDK_DEFAULT_REGION: us-east-1
+      # Read by infra/bin/cdk.ts. DOMAIN may be empty: the site then serves from its CloudFront domain.
+      DOMAIN: ${{ vars.DOMAIN }}
+      CONTACT_TO: ${{ vars.CONTACT_TO }}
+      MAIL_FROM: ${{ vars.MAIL_FROM }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build site with its public URL
+        env:
+          SITE_URL: ${{ vars.DOMAIN != '' && format('https://{0}', vars.DOMAIN) || vars.SITE_URL }}
+        run: pnpm build
+
+      - name: Bundle Lambda functions
+        run: pnpm bundle
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/portfolio-github-deploy-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: CDK diff (preflight, never blocks)
+        continue-on-error: true
+        run: pnpm --filter @portfolio/infra exec cdk diff portfolio
+
+      # BucketDeployment uploads apps/web/dist and invalidates CloudFront.
+      - name: CDK deploy
+        run: pnpm --filter @portfolio/infra exec cdk deploy portfolio --require-approval never

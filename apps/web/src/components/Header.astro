@@ -1,0 +1,22 @@
+---
+import { site } from "@/data/site";
+
+const links = [
+  { href: "/#work", label: "Work" },
+  { href: "/#experience", label: "Experience" },
+  { href: "/#contact", label: "Contact" },
+];
+---
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label={`${site.name} — home`}>
+      <span class="mark" aria-hidden="true">HA</span>
+      <span class="brand-name">{site.name}</span>
+    </a>
+    <nav aria-label="Primary">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+      <a class="btn btn-small" href={site.cv} download>CV</a>
+    </nav>
+  </div>
+</header>

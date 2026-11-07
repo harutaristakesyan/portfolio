@@ -1,0 +1,29 @@
+{
+  "name": "@portfolio/infra",
+  "private": true,
+  "version": "2.0.0",
+  "description": "AWS CDK: S3 + CloudFront for the site, HTTP API + Lambda for the contact form",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "bundle": "tsx scripts/bundle-functions.ts",
+    "test": "pnpm run bundle && vitest run",
+    "synth": "pnpm run bundle && cdk synth portfolio",
+    "diff": "pnpm run bundle && cdk diff portfolio",
+    "deploy": "pnpm run bundle && cdk deploy portfolio --require-approval never",
+    "deploy:oidc": "cdk --app 'tsx bin/github-oidc.ts' deploy portfolio-github-oidc --require-approval never",
+    "lint": "biome lint .",
+    "check": "biome check --write ."
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.273.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "aws-cdk": "^2.1145.0",
+    "esbuild": "^0.25.12",
+    "tsx": "^4.19.4",
+    "vitest": "^3.2.4"
+  }
+}

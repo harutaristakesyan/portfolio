@@ -1,0 +1,10 @@
+---
+description: Portfolio project policy and agent workflow
+alwaysApply: true
+---
+
+Read `README.md`, then `AGENTS.md`. It is the canonical policy for every AI tool: content rules
+(no client or product names in cases, claims only the CV supports), technical rules (static Astro,
+strict CSP, no inlined scripts or styles, one Lambda per route) and the deploy rule (master deploys
+automatically; never push or run CDK without an explicit instruction). Module-specific notes live in
+`.claude/rules/`. Do not duplicate or override these rules in tool-specific files.

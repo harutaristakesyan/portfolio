@@ -1,0 +1,72 @@
+{
+  "includeGitInstructions": false,
+  "attribution": {
+    "commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": ""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install --frozen-lockfile)",
+      "Bash(pnpm check)",
+      "Bash(pnpm check:ci)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm build)",
+      "Bash(pnpm test)",
+      "Bash(pnpm bundle)",
+      "Bash(pnpm synth)",
+      "Bash(pnpm --filter * typecheck)",
+      "Bash(pnpm --filter * test)",
+      "Bash(pnpm --filter * build)",
+      "Bash(pnpm exec vitest run *)",
+      "Bash(pnpm exec biome *)",
+      "Bash(pnpm exec tsc *)",
+      "Bash(pnpm exec astro check*)",
+      "Bash(node apps/web/scripts/og.mjs)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git switch *)",
+      "Bash(git checkout -b *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "WebFetch(domain:docs.astro.build)",
+      "WebFetch(domain:docs.aws.amazon.com)",
+      "WebFetch(domain:biomejs.dev)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh workflow run *)",
+      "Bash(pnpm deploy *)",
+      "Bash(pnpm diff *)",
+      "Bash(pnpm exec cdk *)",
+      "Bash(aws *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(apps/web/public/resume.pdf)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/format-file.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

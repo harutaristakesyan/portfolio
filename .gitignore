@@ -1,25 +1,25 @@
-# build output
-dist/
-
-# generated types
-.astro/
-
 # dependencies
 node_modules/
+.pnpm-store/
 
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# build output
+apps/*/dist/
+.astro/
+infra/.lambda/
+infra/cdk.out/
 
-# environment variables
+# environment
 .env
-.env.production
+.env.*
+!.env.example
 
-# macOS-specific files
+# logs and OS files
+*.log
 .DS_Store
 
-# jetbrains setting folder
+# editors
 .idea/
-/.vercel/
+.vscode/
+
+# agent-local settings
+.claude/settings.local.json

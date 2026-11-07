@@ -44,6 +44,7 @@ jobs:
       CDK_DEFAULT_REGION: us-east-1
       # Read by infra/bin/cdk.ts. DOMAIN may be empty: the site then serves from its CloudFront domain.
       DOMAIN: ${{ vars.DOMAIN }}
+      GOOGLE_DKIM_PUBLIC_KEY: ${{ vars.GOOGLE_DKIM_PUBLIC_KEY }}
       CONTACT_TO: ${{ vars.CONTACT_TO }}
       MAIL_FROM: ${{ vars.MAIL_FROM }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

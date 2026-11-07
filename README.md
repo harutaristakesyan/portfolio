@@ -37,7 +37,7 @@ One-time setup, from a machine with AWS credentials for the account:
 2. `pnpm --filter @portfolio/infra deploy:oidc` — creates `portfolio-github-deploy-role`, trusted by
    this repository's `prod` environment in both `sub` forms GitHub can send (plain and with ids).
 3. In GitHub → Settings → Environments → `prod`, set variables `AWS_ACCOUNT_ID`, `CONTACT_TO`,
-   `MAIL_FROM`, and either `DOMAIN` (apex with a Route 53 hosted zone in the account) or `SITE_URL`
+   `MAIL_FROM`, optionally `GOOGLE_DKIM_PUBLIC_KEY` (harut.dev mail), and either `DOMAIN` (apex with a Route 53 hosted zone in the account) or `SITE_URL`
    (the CloudFront URL, once known); secret `RESEND_API_KEY`.
 4. Push to `master`. The first deploy without `DOMAIN` prints `SiteUrl` (the CloudFront domain); set
    `SITE_URL` to it so canonical URLs and the sitemap are right, or set `DOMAIN` and redeploy.

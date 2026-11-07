@@ -32,6 +32,13 @@ export interface SiteStackProps extends StackProps {
   source: string;
   /** Apex domain with a Route 53 hosted zone in this account. Omit to serve from the CloudFront domain. */
   domain?: string;
+  /** Google Workspace records for the domain (user alias domain of the Readymade workspace). */
+  mail?: {
+    /** `google-site-verification=…` token from the Admin console. */
+    siteVerification: string;
+    /** Public DKIM key (the `p=` value) once generated in the Admin console; omitted until then. */
+    dkimPublicKey?: string;
+  };
   contactTo: string;
   mailFrom: string;
   resendApiKey: string;
@@ -243,6 +250,36 @@ export class SiteStack extends Stack {
       new route53.AaaaRecord(this, "ApexV6", { zone, target });
       new route53.ARecord(this, "Www", { zone, recordName: "www", target });
       new route53.AaaaRecord(this, "WwwV6", { zone, recordName: "www", target });
+    }
+    if (zone && props.mail) {
+      const ttl = Duration.seconds(300);
+      // One apex TXT set carries both the Workspace verification and SPF: Route 53 allows a
+      // single TXT record set per name, so they must live together.
+      new route53.TxtRecord(this, "ApexTxt", {
+        zone,
+        values: [props.mail.siteVerification, "v=spf1 include:_spf.google.com ~all"],
+        ttl,
+      });
+      new route53.MxRecord(this, "GoogleWorkspaceMail", {
+        zone,
+        values: [{ priority: 1, hostName: "smtp.google.com" }],
+        ttl,
+      });
+      if (props.mail.dkimPublicKey) {
+        new route53.TxtRecord(this, "GoogleWorkspaceDkim", {
+          zone,
+          recordName: "google._domainkey",
+          values: [`v=DKIM1;k=rsa;p=${props.mail.dkimPublicKey}`],
+          ttl,
+        });
+      }
+      // Monitoring only until every legitimate sender is confirmed.
+      new route53.TxtRecord(this, "MailDmarc", {
+        zone,
+        recordName: "_dmarc",
+        values: ["v=DMARC1; p=none; adkim=r; aspf=r"],
+        ttl,
+      });
     }
 
     new CfnOutput(this, "SiteUrl", {

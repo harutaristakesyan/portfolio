@@ -8,7 +8,7 @@ const source = "infra/test/fixtures/dist";
 const account = "123456789012";
 const base = { contactTo: "me@example.com", mailFrom: "Me <me@example.com>", resendApiKey: "re_x" };
 
-const synth = (domain?: string) => {
+const synth = (domain?: string, mail?: { siteVerification: string; dkimPublicKey?: string }) => {
   const app = new App({
     context: {
       [`hosted-zone:account=${account}:domainName=example.com:region=us-east-1`]: {
@@ -21,6 +21,7 @@ const synth = (domain?: string) => {
     env: { account, region: "us-east-1" },
     source,
     domain,
+    mail,
     ...base,
   });
   return Template.fromStack(stack);
@@ -148,6 +149,39 @@ describe("SiteStack with a domain", () => {
     const code = String(Object.values(fns)[0]?.Properties.FunctionCode);
     expect(code).toContain('host === "www.example.com"');
     expect(code).toContain('"https://example.com" + uri');
+  });
+});
+
+describe("SiteStack with Google Workspace mail", () => {
+  it("adds MX, one apex TXT with verification + SPF, DMARC, and DKIM only when the key is known", () => {
+    const t = synth("example.com", { siteVerification: "google-site-verification=abc" });
+    t.hasResourceProperties("AWS::Route53::RecordSet", {
+      Name: "example.com.",
+      Type: "MX",
+      ResourceRecords: ["1 smtp.google.com"],
+    });
+    t.hasResourceProperties("AWS::Route53::RecordSet", {
+      Name: "example.com.",
+      Type: "TXT",
+      ResourceRecords: ['"google-site-verification=abc"', '"v=spf1 include:_spf.google.com ~all"'],
+    });
+    t.hasResourceProperties("AWS::Route53::RecordSet", {
+      Name: "_dmarc.example.com.",
+      Type: "TXT",
+    });
+    t.resourceCountIs("AWS::Route53::RecordSet", 4 + 3);
+
+    const withDkim = synth("example.com", { siteVerification: "x", dkimPublicKey: "MIIB" });
+    withDkim.hasResourceProperties("AWS::Route53::RecordSet", {
+      Name: "google._domainkey.example.com.",
+      Type: "TXT",
+      ResourceRecords: ['"v=DKIM1;k=rsa;p=MIIB"'],
+    });
+  });
+
+  it("adds no mail records without a domain", () => {
+    const t = synth(undefined, { siteVerification: "x" });
+    t.resourceCountIs("AWS::Route53::RecordSet", 0);
   });
 });
 

@@ -2,9 +2,9 @@ import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
 import { contactMock } from "./dev/contact-mock.ts";
 
-// SITE_URL is set by the deploy workflow from the configured domain; local builds use a
-// placeholder so canonical and sitemap URLs are still absolute.
-const site = process.env.SITE_URL ?? "https://portfolio.invalid";
+// SITE_URL is set by the deploy workflow from the configured domain; local builds and an empty
+// variable use a placeholder so canonical and sitemap URLs are still absolute.
+const site = process.env.SITE_URL || "https://portfolio.invalid";
 
 export default defineConfig({
   site,

@@ -38,9 +38,8 @@ One-time setup, from a machine with AWS credentials for the account:
 1. `cdk bootstrap aws://<account>/us-east-1` if this account has not been bootstrapped (readymade did).
 2. `pnpm --filter @portfolio/infra deploy:oidc` — creates `portfolio-github-deploy-role`, trusted by
    this repository's `prod` environment in both `sub` forms GitHub can send (plain and with ids).
-3. In GitHub → Settings → Environments → `prod`, set variable `AWS_ACCOUNT_ID` and optionally
-   `GOOGLE_DKIM_PUBLIC_KEY` (harut.dev mail). No secrets: the Lambda sends through SES with its IAM
-   role. The domain `harut.dev` is fixed in `infra/bin/cdk.ts` and `apps/web/astro.config.ts` (its
+3. In GitHub → Settings → Environments → `prod`, set variable `AWS_ACCOUNT_ID` (the only one). No
+   secrets: the Lambda sends through SES with its IAM role. The domain `harut.dev` is fixed in `infra/bin/cdk.ts` and `apps/web/astro.config.ts` (its
    Route 53 hosted zone is in the account); so are the sender `hello@harut.dev` and the contact-form
    recipient `aristakesyan@harut.dev`, both on the SES-verified domain.
 4. Push to `master`, then send a test message through the form.

@@ -22,8 +22,8 @@ paths:
   `test/fixtures/dist`; keep the tests green and extend them when adding behaviours, origins or
   headers. Synth proves the template, not AWS permissions or DNS.
 - The workflow deploys on push to `master` only after verify passes. Secrets and variables live in
-  the GitHub environment `prod` (`AWS_ACCOUNT_ID`, optional `GOOGLE_DKIM_PUBLIC_KEY`). Sender
-  `hello@harut.dev` and recipient `aristakesyan@harut.dev` are fixed in `bin/cdk.ts`. The SES
+  the GitHub environment `prod` (only `AWS_ACCOUNT_ID`). The domain, Google Workspace records,
+  sender `hello@harut.dev` and recipient `aristakesyan@harut.dev` are fixed in `bin/cdk.ts`. The SES
   domain identity (Easy DKIM + `bounce.` MAIL FROM) is in the stack; the Lambda role may send only
   from it. Never add secrets to source, outputs or logs.
 - Do not run `cdk deploy`, `cdk destroy` or `aws` commands without an explicit instruction.

@@ -6,7 +6,7 @@ export const site = {
   title: "Backend engineer — TypeScript on AWS serverless, Java/Spring Boot",
   description:
     "Backend engineer with 7+ years in production systems. TypeScript on AWS serverless (Lambda, API Gateway, Postgres) and Java/Spring Boot services. Integrations that survive bad upstream days.",
-  email: "harut.aristakesyan@gmail.com",
+  email: "aristakesyan@harut.dev",
   linkedin: "https://www.linkedin.com/in/harutaristakesyan/",
   github: "https://github.com/harutaristakesyan",
   repo: "https://github.com/harutaristakesyan/portfolio",

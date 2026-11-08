@@ -31,23 +31,20 @@ export const BUNDLE_DIR = path.join(here, "..", ".lambda");
 export interface SiteStackProps extends StackProps {
   /** Repo-relative build dir of the static site, e.g. `apps/web/dist`. */
   source: string;
-  /** Apex domain with a Route 53 hosted zone in this account. Omit to serve from the CloudFront domain. */
-  domain?: string;
+  /** Apex domain with a Route 53 hosted zone in this account. */
+  domain: string;
   /** Google Workspace records for the domain (user alias domain of the Readymade workspace). */
-  mail?: {
+  mail: {
     /** `google-site-verification=…` token from the Admin console. */
     siteVerification: string;
-    /** Public DKIM key (the `p=` value) once generated in the Admin console; omitted until then. */
-    dkimPublicKey?: string;
+    /** Public DKIM key (the `p=` value) generated in the Admin console. */
+    dkimPublicKey: string;
   };
-  /** Recipient of contact-form mail. */
+  /** Recipient of contact-form mail, an address on `domain`. */
   contactTo: string;
-  /** Sender, e.g. `Portfolio <contact@example.com>`. With a domain it must be on that domain. */
+  /** Sender, e.g. `Portfolio <hello@example.com>`, an address on `domain`. */
   mailFrom: string;
 }
-
-/** `Name <a@b.c>` → `a@b.c`. */
-export const emailAddress = (value: string) => (value.match(/<([^>]+)>/)?.[1] ?? value).trim();
 
 /** Page routes present in the exact build being uploaded; the edge rejects anything else. */
 export function staticHtmlPaths(source: string): string[] {
@@ -73,43 +70,22 @@ export class SiteStack extends Stack {
     super(scope, id, props);
     const { domain, source } = props;
 
-    // --- DNS + certificate (only with a domain) ------------------------------
-    const zone = domain
-      ? route53.HostedZone.fromLookup(this, "Zone", { domainName: domain })
-      : undefined;
-    const cert =
-      domain && zone
-        ? new acm.Certificate(this, "Cert", {
-            domainName: domain,
-            subjectAlternativeNames: [`www.${domain}`],
-            validation: acm.CertificateValidation.fromDns(zone),
-          })
-        : undefined;
+    // --- DNS + certificate ------------------------------------------------------
+    const zone = route53.HostedZone.fromLookup(this, "Zone", { domainName: domain });
+    const cert = new acm.Certificate(this, "Cert", {
+      domainName: domain,
+      subjectAlternativeNames: [`www.${domain}`],
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
 
     // --- Outgoing mail (SES) ----------------------------------------------------
-    // With a domain, SES verifies it through Route 53 (Easy DKIM CNAMEs) and uses a custom
-    // MAIL FROM subdomain so both DKIM and SPF align for DMARC. Without one, the sender address
-    // itself is the identity and AWS emails a verification link on the first deploy.
-    const fromAddress = emailAddress(props.mailFrom);
-    const fromDomain = fromAddress.split("@")[1]?.toLowerCase();
-    if (domain && fromDomain !== domain.toLowerCase()) {
-      throw new Error(`MAIL_FROM (${fromAddress}) must be an address on ${domain}`);
-    }
-    const senderIdentity =
-      domain && zone
-        ? new ses.EmailIdentity(this, "MailDomain", {
-            identity: ses.Identity.publicHostedZone(zone),
-            mailFromDomain: `bounce.${domain}`,
-          })
-        : new ses.EmailIdentity(this, "MailSender", { identity: ses.Identity.email(fromAddress) });
-    // While the account is in the SES sandbox the recipient must be verified too (and the
-    // sending role needs permission on it). One click on the AWS verification email.
-    const toAddress = emailAddress(props.contactTo);
-    const recipientIdentity =
-      toAddress.toLowerCase() === fromAddress.toLowerCase() ||
-      (domain && toAddress.split("@")[1]?.toLowerCase() === domain.toLowerCase())
-        ? undefined
-        : new ses.EmailIdentity(this, "MailRecipient", { identity: ses.Identity.email(toAddress) });
+    // SES verifies the whole domain through Route 53 (Easy DKIM CNAMEs) with a custom MAIL FROM
+    // subdomain, so DKIM and SPF both align for DMARC. Sender and recipient are both on the
+    // domain, which covers them even in the SES sandbox.
+    const mailIdentity = new ses.EmailIdentity(this, "MailDomain", {
+      identity: ses.Identity.publicHostedZone(zone),
+      mailFromDomain: `bounce.${domain}`,
+    });
 
     // --- API: one Lambda per route ------------------------------------------
     const httpApi = new HttpApi(this, "HttpApi", { apiName: id, createDefaultStage: false });
@@ -138,8 +114,7 @@ export class SiteStack extends Stack {
           removalPolicy: RemovalPolicy.DESTROY,
         }),
       });
-      senderIdentity.grantSendEmail(fn);
-      recipientIdentity?.grantSendEmail(fn);
+      mailIdentity.grantSendEmail(fn);
       const [method, routePath] = route.routeKey.split(" ") as [HttpMethod, string];
       new HttpRoute(this, `${baseId}-route`, {
         httpApi,
@@ -158,11 +133,6 @@ export class SiteStack extends Stack {
 
     const htmlPaths = staticHtmlPaths(source);
     const apiPaths = allRoutes.map((r) => r.routeKey.split(" ")[1]);
-    const wwwRedirect = domain
-      ? `if (host === "www.${domain}") {
-            return { statusCode: 301, statusDescription: "Moved Permanently", headers: { location: { value: "https://${domain}" + uri } } };
-          }`
-      : "";
     const urlRewrite = new cloudfront.Function(this, "UrlRewrite", {
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       code: cloudfront.FunctionCode.fromInline(`
@@ -170,7 +140,9 @@ export class SiteStack extends Stack {
           var req = event.request;
           var uri = req.uri;
           var host = req.headers.host && req.headers.host.value;
-          ${wwwRedirect}
+          if (host === "www.${domain}") {
+            return { statusCode: 301, statusDescription: "Moved Permanently", headers: { location: { value: "https://${domain}" + uri } } };
+          }
           // Only declared API routes exist; everything else under /api is not a page.
           if (uri === "/api" || uri.indexOf("/api/") === 0) {
             return ${JSON.stringify(apiPaths)}.indexOf(uri) !== -1 ? req : { statusCode: 404, statusDescription: "Not Found" };
@@ -240,11 +212,10 @@ export class SiteStack extends Stack {
     };
 
     const dist = new cloudfront.Distribution(this, "Cdn", {
-      domainNames: domain ? [domain, `www.${domain}`] : undefined,
+      domainNames: [domain, `www.${domain}`],
       certificate: cert,
       defaultRootObject: "index.html",
-      // Only meaningful with a custom certificate; the default CloudFront certificate fixes its own policy.
-      minimumProtocolVersion: cert ? cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021 : undefined,
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {
@@ -275,47 +246,39 @@ export class SiteStack extends Stack {
     });
 
     // --- Records --------------------------------------------------------------
-    if (zone) {
-      const target = route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(dist));
-      new route53.ARecord(this, "Apex", { zone, target });
-      new route53.AaaaRecord(this, "ApexV6", { zone, target });
-      new route53.ARecord(this, "Www", { zone, recordName: "www", target });
-      new route53.AaaaRecord(this, "WwwV6", { zone, recordName: "www", target });
-    }
-    if (zone && props.mail) {
-      const ttl = Duration.seconds(300);
-      // One apex TXT set carries both the Workspace verification and SPF: Route 53 allows a
-      // single TXT record set per name, so they must live together.
-      new route53.TxtRecord(this, "ApexTxt", {
-        zone,
-        values: [props.mail.siteVerification, "v=spf1 include:_spf.google.com ~all"],
-        ttl,
-      });
-      new route53.MxRecord(this, "GoogleWorkspaceMail", {
-        zone,
-        values: [{ priority: 1, hostName: "smtp.google.com" }],
-        ttl,
-      });
-      if (props.mail.dkimPublicKey) {
-        new route53.TxtRecord(this, "GoogleWorkspaceDkim", {
-          zone,
-          recordName: "google._domainkey",
-          values: [`v=DKIM1;k=rsa;p=${props.mail.dkimPublicKey}`],
-          ttl,
-        });
-      }
-      // Monitoring only until every legitimate sender is confirmed.
-      new route53.TxtRecord(this, "MailDmarc", {
-        zone,
-        recordName: "_dmarc",
-        values: ["v=DMARC1; p=none; adkim=r; aspf=r"],
-        ttl,
-      });
-    }
-
-    new CfnOutput(this, "SiteUrl", {
-      value: domain ? `https://${domain}` : `https://${dist.distributionDomainName}`,
+    const target = route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(dist));
+    new route53.ARecord(this, "Apex", { zone, target });
+    new route53.AaaaRecord(this, "ApexV6", { zone, target });
+    new route53.ARecord(this, "Www", { zone, recordName: "www", target });
+    new route53.AaaaRecord(this, "WwwV6", { zone, recordName: "www", target });
+    const ttl = Duration.seconds(300);
+    // One apex TXT set carries both the Workspace verification and SPF: Route 53 allows a
+    // single TXT record set per name, so they must live together.
+    new route53.TxtRecord(this, "ApexTxt", {
+      zone,
+      values: [props.mail.siteVerification, "v=spf1 include:_spf.google.com ~all"],
+      ttl,
     });
+    new route53.MxRecord(this, "GoogleWorkspaceMail", {
+      zone,
+      values: [{ priority: 1, hostName: "smtp.google.com" }],
+      ttl,
+    });
+    new route53.TxtRecord(this, "GoogleWorkspaceDkim", {
+      zone,
+      recordName: "google._domainkey",
+      values: [`v=DKIM1;k=rsa;p=${props.mail.dkimPublicKey}`],
+      ttl,
+    });
+    // Monitoring only until every legitimate sender is confirmed.
+    new route53.TxtRecord(this, "MailDmarc", {
+      zone,
+      recordName: "_dmarc",
+      values: ["v=DMARC1; p=none; adkim=r; aspf=r"],
+      ttl,
+    });
+
+    new CfnOutput(this, "SiteUrl", { value: `https://${domain}` });
     new CfnOutput(this, "CloudFrontDomain", { value: dist.distributionDomainName });
     new CfnOutput(this, "ApiUrl", { value: httpApi.apiEndpoint });
   }

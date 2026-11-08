@@ -13,7 +13,8 @@ paths:
   control, CloudFront with a viewer-request Function for clean URLs and 404s, a response headers
   policy with CSP and HSTS, an HTTP API with throttling, one Node 24 ARM64 Lambda per route from
   `lib/routes.ts`, ACM certificate and Route 53 records for `harut.dev` (a constant in `bin/cdk.ts`, mirrored as
-  `site` in `apps/web/astro.config.ts`; the stack's `domain` prop stays optional for tests).
+  `site` in `apps/web/astro.config.ts`). `domain` and `mail` are required props; tests use
+  `example.com`.
 - `portfolio-github-oidc` (`lib/github-oidc-stack.ts`) is deployed once by hand and trusts only
   this repository's `prod` environment. It assumes the CDK bootstrap roles; no long-lived keys.
 - Construct ids derived from handler paths are frozen; renaming one recreates the route and fails.

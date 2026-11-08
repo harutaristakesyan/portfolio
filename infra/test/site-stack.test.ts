@@ -8,11 +8,7 @@ const source = "infra/test/fixtures/dist";
 const account = "123456789012";
 const base = { contactTo: "me@example.com", mailFrom: "Me <me@example.com>" };
 
-const synth = (
-  domain?: string,
-  mail?: { siteVerification: string; dkimPublicKey?: string },
-  addresses: { contactTo: string; mailFrom: string } = base,
-) => {
+const synth = () => {
   const app = new App({
     context: {
       [`hosted-zone:account=${account}:domainName=example.com:region=us-east-1`]: {
@@ -24,9 +20,9 @@ const synth = (
   const stack = new SiteStack(app, "portfolio", {
     env: { account, region: "us-east-1" },
     source,
-    domain,
-    mail,
-    ...addresses,
+    domain: "example.com",
+    mail: { siteVerification: "google-site-verification=abc", dkimPublicKey: "MIIB" },
+    ...base,
   });
   return Template.fromStack(stack);
 };
@@ -37,7 +33,7 @@ describe("staticHtmlPaths", () => {
   });
 });
 
-describe("SiteStack without a domain", () => {
+describe("SiteStack", () => {
   const t = synth();
 
   it("keeps the bucket private behind origin access control", () => {
@@ -57,10 +53,16 @@ describe("SiteStack without a domain", () => {
     });
   });
 
-  it("serves the site with https, http/3 and security headers, no custom domain", () => {
+  it("serves apex and www over https with a DNS-validated certificate, http/3 and security headers", () => {
+    t.hasResourceProperties("AWS::CertificateManager::Certificate", {
+      DomainName: "example.com",
+      SubjectAlternativeNames: ["www.example.com"],
+      ValidationMethod: "DNS",
+    });
     t.hasResourceProperties("AWS::CloudFront::Distribution", {
       DistributionConfig: Match.objectLike({
-        Aliases: Match.absent(),
+        Aliases: ["example.com", "www.example.com"],
+        ViewerCertificate: Match.objectLike({ MinimumProtocolVersion: "TLSv1.2_2021" }),
         HttpVersion: "http2and3",
         DefaultRootObject: "index.html",
         DefaultCacheBehavior: Match.objectLike({
@@ -84,17 +86,16 @@ describe("SiteStack without a domain", () => {
         }),
       }),
     });
-    t.resourceCountIs("AWS::CertificateManager::Certificate", 0);
-    t.resourceCountIs("AWS::Route53::RecordSet", 0);
   });
 
-  it("maps clean URLs to html objects and rejects unknown pages at the edge", () => {
+  it("maps clean URLs to html objects, rejects unknown pages and redirects www at the edge", () => {
     const fns = t.findResources("AWS::CloudFront::Function");
     const code = String(Object.values(fns)[0]?.Properties.FunctionCode);
     expect(code).toContain('"/work/case.html"');
     expect(code).not.toContain('req.uri = "/404.html"');
     expect(code).toContain('"/api/contact"');
-    expect(code).not.toContain("www.");
+    expect(code).toContain('host === "www.example.com"');
+    expect(code).toContain('"https://example.com" + uri');
   });
 
   it("routes only POST /api/contact to a Node 24 ARM Lambda and throttles the API", () => {
@@ -130,35 +131,9 @@ describe("SiteStack without a domain", () => {
       DistributionPaths: ["/*"],
     });
   });
-});
 
-describe("SiteStack with a domain", () => {
-  const t = synth("example.com");
-
-  it("adds a DNS-validated certificate, aliases and apex + www records", () => {
-    t.hasResourceProperties("AWS::CertificateManager::Certificate", {
-      DomainName: "example.com",
-      SubjectAlternativeNames: ["www.example.com"],
-      ValidationMethod: "DNS",
-    });
-    t.hasResourceProperties("AWS::CloudFront::Distribution", {
-      DistributionConfig: Match.objectLike({ Aliases: ["example.com", "www.example.com"] }),
-    });
-    t.resourceCountIs("AWS::Route53::RecordSet", 4 + 5); // + SES: 3 DKIM CNAMEs, MAIL FROM MX + SPF
+  it("adds apex + www aliases and the Google Workspace records: MX, one TXT with verification + SPF, DKIM, DMARC", () => {
     t.hasResourceProperties("AWS::Route53::RecordSet", { Name: "www.example.com.", Type: "AAAA" });
-  });
-
-  it("redirects www to the apex at the edge", () => {
-    const fns = t.findResources("AWS::CloudFront::Function");
-    const code = String(Object.values(fns)[0]?.Properties.FunctionCode);
-    expect(code).toContain('host === "www.example.com"');
-    expect(code).toContain('"https://example.com" + uri');
-  });
-});
-
-describe("SiteStack with Google Workspace mail", () => {
-  it("adds MX, one apex TXT with verification + SPF, DMARC, and DKIM only when the key is known", () => {
-    const t = synth("example.com", { siteVerification: "google-site-verification=abc" });
     t.hasResourceProperties("AWS::Route53::RecordSet", {
       Name: "example.com.",
       Type: "MX",
@@ -170,28 +145,26 @@ describe("SiteStack with Google Workspace mail", () => {
       ResourceRecords: ['"google-site-verification=abc"', '"v=spf1 include:_spf.google.com ~all"'],
     });
     t.hasResourceProperties("AWS::Route53::RecordSet", {
-      Name: "_dmarc.example.com.",
-      Type: "TXT",
-    });
-    t.resourceCountIs("AWS::Route53::RecordSet", 4 + 3 + 5); // + SES: 3 DKIM CNAMEs, MAIL FROM MX + SPF
-
-    const withDkim = synth("example.com", { siteVerification: "x", dkimPublicKey: "MIIB" });
-    withDkim.hasResourceProperties("AWS::Route53::RecordSet", {
       Name: "google._domainkey.example.com.",
       Type: "TXT",
       ResourceRecords: ['"v=DKIM1;k=rsa;p=MIIB"'],
     });
+    t.hasResourceProperties("AWS::Route53::RecordSet", {
+      Name: "_dmarc.example.com.",
+      Type: "TXT",
+    });
+    // 4 alias + 4 Google Workspace + 5 SES (3 DKIM CNAMEs, MAIL FROM MX + SPF)
+    t.resourceCountIs("AWS::Route53::RecordSet", 4 + 4 + 5);
   });
 
-  it("adds no mail records without a domain", () => {
-    const t = synth(undefined, { siteVerification: "x" });
-    t.resourceCountIs("AWS::Route53::RecordSet", 0);
-  });
-});
-
-describe("SiteStack mail via SES", () => {
-  const sendPolicy = (t: Template) =>
-    t.findResources("AWS::IAM::Policy", {
+  it("sends mail through SES from the verified domain, with no API key in the Lambda", () => {
+    t.hasResourceProperties("AWS::SES::EmailIdentity", {
+      EmailIdentity: "example.com",
+      MailFromAttributes: { MailFromDomain: "bounce.example.com" },
+    });
+    t.resourceCountIs("AWS::SES::EmailIdentity", 1);
+    t.hasResourceProperties("AWS::Route53::RecordSet", { Name: "bounce.example.com.", Type: "MX" });
+    const policies = t.findResources("AWS::IAM::Policy", {
       Properties: {
         PolicyDocument: {
           Statement: Match.arrayWith([
@@ -200,56 +173,13 @@ describe("SiteStack mail via SES", () => {
         },
       },
     });
-
-  it("has no API key in the Lambda environment", () => {
-    const t = synth();
+    const [policy] = Object.values(policies);
+    expect(JSON.stringify(policy?.Properties.PolicyDocument.Statement)).toContain("MailDomain");
     const fns = t.findResources("AWS::Lambda::Function", {
       Properties: { Handler: "contact/submit.handler" },
     });
     const vars = Object.values(fns)[0]?.Properties.Environment.Variables;
     expect(Object.keys(vars).sort()).toEqual(["CONTACT_TO", "MAIL_FROM"]);
-  });
-
-  it("verifies the domain with Easy DKIM and a MAIL FROM subdomain, and lets the Lambda send", () => {
-    const t = synth("example.com", undefined, {
-      contactTo: "owner@gmail.com",
-      mailFrom: "Portfolio <contact@example.com>",
-    });
-    t.hasResourceProperties("AWS::SES::EmailIdentity", {
-      EmailIdentity: "example.com",
-      MailFromAttributes: { MailFromDomain: "bounce.example.com" },
-    });
-    t.hasResourceProperties("AWS::SES::EmailIdentity", { EmailIdentity: "owner@gmail.com" });
-    t.resourceCountIs("AWS::SES::EmailIdentity", 2);
-    t.resourceCountIs("AWS::Route53::RecordSet", 4 + 5);
-    t.hasResourceProperties("AWS::Route53::RecordSet", {
-      Name: "bounce.example.com.",
-      Type: "MX",
-    });
-    const [policy] = Object.values(sendPolicy(t));
-    const refs = JSON.stringify(policy?.Properties.PolicyDocument.Statement);
-    expect(refs).toContain("MailDomain");
-    expect(refs).toContain("MailRecipient");
-  });
-
-  it("needs no recipient identity when the recipient is on the verified domain", () => {
-    const t = synth("example.com", undefined, {
-      contactTo: "me@example.com",
-      mailFrom: "contact@example.com",
-    });
-    t.resourceCountIs("AWS::SES::EmailIdentity", 1);
-  });
-
-  it("uses the sender address as the identity without a domain", () => {
-    const t = synth();
-    t.hasResourceProperties("AWS::SES::EmailIdentity", { EmailIdentity: "me@example.com" });
-    t.resourceCountIs("AWS::SES::EmailIdentity", 1);
-  });
-
-  it("refuses a sender that is not on the domain", () => {
-    expect(() =>
-      synth("example.com", undefined, { contactTo: "a@b.com", mailFrom: "x@other.com" }),
-    ).toThrow(/MAIL_FROM/);
   });
 });
 
